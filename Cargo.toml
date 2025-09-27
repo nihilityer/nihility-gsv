@@ -1,0 +1,26 @@
+[package]
+name = "nihility-gsv"
+version = "0.1.0"
+edition = "2024"
+description = "A GPT_Sovits inference lib in Rust base on libtorch"
+license = "MIT"
+
+[dependencies]
+anyhow = "1.0.87"
+tokenizers = { version = "0.22.0", default-features = false, features = ["onig"] }
+tch = { version = "0.20.0" }
+wav_io = "0.1"
+serde_json = "1.0"
+jieba-rs = { version = "0.8", features = ["tfidf", "textrank"] }
+num2en = "1.0.0"
+log = "0.4"
+env_logger = "0.11"
+lazy_static = "1.5"
+pest = "2.8"
+pest_derive = "2.8"
+serde = { version = "1.0", features = ["derive"] }
+jpreprocess = { version = "0.12", default-features = false, features = ["naist-jdic"], optional = true }
+
+[features]
+default = []
+enable_jp = ["jpreprocess"]
