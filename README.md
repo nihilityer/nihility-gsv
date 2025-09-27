@@ -2,7 +2,44 @@
 
 基于：[gpt_sovits_rs](https://github.com/second-state/gpt_sovits_rs)重写，非常感谢这位大佬的工作
 
-使用tch在rust推理OPT_SVoits模型
+使用tch在rust推理GPT-SoVITS模型
+
+# 使用方法
+
+**后续`lintorch`的设置以及模型下载将会自动化**
+
+## 下载`lintorch`并设置环境变量
+
+根据具体使用的后端下载并解压，设置环境变量：`LIBTORCH`指向解压后的地址（模型暂时基于cpu后端导出）
+
+### linux版本地址
+
+```
+cuda11.8 (cxx11 ABI):		https://download.pytorch.org/libtorch/cu118/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Bcu118.zip
+cuda12.6 (cxx11 ABI):		https://download.pytorch.org/libtorch/cu126/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Bcu126.zip
+cuda12.8 (cxx11 ABI):		https://download.pytorch.org/libtorch/cu128/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Bcu128.zip
+ROCm6.3  (cxx11 ABI):		https://download.pytorch.org/libtorch/rocm6.3/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Brocm6.3.zip
+cpu 	 (cxx11 ABI):		https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Bcpu.zip
+```
+
+### win版本地址
+
+```
+cuda 11.8(Release version):	https://download.pytorch.org/libtorch/cu118/libtorch-win-shared-with-deps-2.7.0%2Bcu118.zip
+cuda11.8 (Debug version):	https://download.pytorch.org/libtorch/cu118/libtorch-win-shared-with-deps-debug-2.7.0%2Bcu118.zip
+cuda12.6 (Release version):	https://download.pytorch.org/libtorch/cu126/libtorch-win-shared-with-deps-2.7.0%2Bcu126.zip
+cuda12.6(Debug version):	https://download.pytorch.org/libtorch/cu126/libtorch-win-shared-with-deps-debug-2.7.0%2Bcu126.zip
+cuda12.8 (Release version):	https://download.pytorch.org/libtorch/cu128/libtorch-win-shared-with-deps-2.7.0%2Bcu128.zip
+cuda12.8(Debug version):	https://download.pytorch.org/libtorch/cu128/libtorch-win-shared-with-deps-debug-2.7.0%2Bcu128.zip
+cpu (Release version):		https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.7.0%2Bcpu.zip
+cpu (Debug version):		https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-debug-2.7.0%2Bcpu.zip
+```
+
+## 模型下载
+
+[huggingface](https://huggingface.co/nihilityer/nihility-gsv)
+
+下载之后放在`model`目录即可
 
 ## 使用cli推理
 
