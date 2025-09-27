@@ -1,0 +1,7 @@
+[target.x86_64-unknown-linux-gnu]
+rustflags = [
+    "-C", "link-arg=-lsupc++",
+    "-C", "link-arg=-Wl,-O1",
+    "-C", "link-arg=-Wl,--as-needed",
+    "-C", "link-arg=-Wl,--strip-all",
+]
