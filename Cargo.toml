@@ -13,13 +13,15 @@ wav_io = "0.1"
 serde_json = "1.0"
 jieba-rs = { version = "0.8", features = ["tfidf", "textrank"] }
 num2en = "1.0.0"
-log = "0.4"
-env_logger = "0.11"
 lazy_static = "1.5"
 pest = "2.8"
 pest_derive = "2.8"
 serde = { version = "1.0", features = ["derive"] }
 jpreprocess = { version = "0.12", default-features = false, features = ["naist-jdic"], optional = true }
+
+tracing = { version = "0.1" }
+tracing-subscriber = { version = "0.3", features = ["local-time", "ansi", "fmt", "std"] }
+time = { version = "0.3", default-features = false, features = ["parsing"] }
 
 [features]
 default = []

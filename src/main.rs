@@ -1,9 +1,24 @@
-use std::sync::Arc;
-
 use nihility_gsv::{gsv, tch, text, text::G2PConfig};
+use std::sync::Arc;
+use time::format_description::well_known::Iso8601;
+use tracing::info;
+use tracing::metadata::LevelFilter;
+use tracing_subscriber::fmt::time::LocalTime;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{Layer, fmt};
 
 fn main() {
-    env_logger::init();
+    tracing_subscriber::registry()
+        .with(
+            fmt::layer()
+                .with_ansi(false)
+                .with_thread_ids(true)
+                .with_target(true)
+                .with_timer(LocalTime::new(Iso8601::DATE_TIME_OFFSET))
+                .with_filter(LevelFilter::DEBUG),
+        )
+        .init();
 
     let g2p_conf = G2PConfig::new("model/mini-bart-g2p.pt".to_string()).with_chinese(
         "model/g2pw_model.pt".to_string(),
@@ -11,7 +26,7 @@ fn main() {
     );
 
     let device = tch::Device::cuda_if_available();
-    log::info!("device: {:?}", device);
+    info!("device: {:?}", device);
 
     let g2p = g2p_conf.build(device).unwrap();
 
@@ -20,14 +35,14 @@ fn main() {
 
     let file = std::fs::File::open(ref_path).unwrap();
     let (head, mut ref_audio_samples) = wav_io::read_from_file(file).unwrap();
-    log::info!("head: {:?}", head);
+    info!("head: {:?}", head);
     if head.sample_rate != 32000 {
-        log::info!("ref audio sample rate: {}, need 32000", head.sample_rate);
+        info!("ref audio sample rate: {}, need 32000", head.sample_rate);
         ref_audio_samples = wav_io::resample::linear(ref_audio_samples, 1, head.sample_rate, 32000);
     }
 
-    log::info!("load ht ref done");
-    log::info!("start write file");
+    info!("load ht ref done");
+    info!("start write file");
 
     let text = "心有所向，日复一日，必有精进。";
     let (text_seq, text_bert) = text::get_phone_and_bert(&g2p, text).unwrap();
@@ -65,7 +80,7 @@ fn main() {
             15,
         )
         .unwrap();
-    log::info!("infer done, cost: {:?}", st.elapsed());
+    info!("infer done, cost: {:?}", st.elapsed());
 
     let output = "out/out.wav";
     let audio_size = audio.size1().unwrap() as usize;
@@ -77,5 +92,5 @@ fn main() {
     println!("start write file {output}");
     let mut file_out = std::fs::File::create(output).unwrap();
     wav_io::write_to_file(&mut file_out, &header, &samples).unwrap();
-    log::info!("write file done");
+    info!("write file done");
 }

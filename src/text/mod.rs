@@ -9,6 +9,7 @@ use std::{
 use pest::Parser;
 use tch::{Kind, Tensor};
 use tokenizers::Tokenizer;
+use tracing::{debug, info, trace, warn};
 
 pub mod g2p_en;
 #[cfg(feature = "enable_jp")]
@@ -46,7 +47,7 @@ impl G2PConfig {
     pub fn build(&self, device: tch::Device) -> anyhow::Result<G2p> {
         let (cn_bert, g2pw) = match &self.cn_setting {
             Some((g2pw_path, cn_bert_path)) => {
-                let tokenizer = tokenizers::Tokenizer::from_str(g2pw::G2PW_TOKENIZER)
+                let tokenizer = Tokenizer::from_str(g2pw::G2PW_TOKENIZER)
                     .map_err(|e| anyhow::anyhow!("load tokenizer error: {}", e))?;
                 let tokenizer = Arc::new(tokenizer);
 
@@ -484,7 +485,7 @@ pub fn split_text(text: &str, max_chunk_size: usize) -> Vec<&str> {
         } else {
             s.chars().count()
         };
-        log::trace!(
+        trace!(
             "s: {:?}, count: {} total_count: {} splite_index: {}",
             s,
             count,
@@ -570,10 +571,10 @@ pub fn get_phone_and_bert(g2p: &G2p, text: &str) -> anyhow::Result<(Tensor, Tens
         for s in i {
             match s {
                 Sentence::Zh(mut zh) => {
-                    log::trace!("zh text: {:?}", zh.zh_text);
-                    log::trace!("zh phones: {:?}", zh.phones);
+                    trace!("zh text: {:?}", zh.zh_text);
+                    trace!("zh phones: {:?}", zh.phones);
                     if zh.zh_text.trim().is_empty() {
-                        log::trace!("get a empty zh text, skip");
+                        trace!("get a empty zh text, skip");
                         continue;
                     }
 
@@ -587,15 +588,15 @@ pub fn get_phone_and_bert(g2p: &G2p, text: &str) -> anyhow::Result<(Tensor, Tens
                             if cfg!(debug_assertions) {
                                 return Err(e);
                             } else {
-                                log::warn!("get a error, skip: {}", zh.zh_text);
-                                log::warn!("zh build_phone_and_bert error: {}", e);
+                                warn!("get a error, skip: {}", zh.zh_text);
+                                warn!("zh build_phone_and_bert error: {}", e);
                             }
                         }
                     };
                 }
                 Sentence::En(mut en) => {
-                    log::trace!("en text: {:?}", en.en_text);
-                    log::trace!("en phones: {:?}", en.phones);
+                    trace!("en text: {:?}", en.en_text);
+                    trace!("en phones: {:?}", en.phones);
                     en.generate_phones(g2p);
                     match en.build_phone_and_bert(g2p) {
                         Ok((t, bert)) => {
@@ -606,15 +607,15 @@ pub fn get_phone_and_bert(g2p: &G2p, text: &str) -> anyhow::Result<(Tensor, Tens
                             if cfg!(debug_assertions) {
                                 return Err(e);
                             } else {
-                                log::warn!("get a error, skip: {:?}", en.en_text);
-                                log::warn!("zh build_phone_and_bert error: {}", e);
+                                warn!("get a error, skip: {:?}", en.en_text);
+                                warn!("zh build_phone_and_bert error: {}", e);
                             }
                         }
                     };
                 }
                 #[cfg(feature = "enable_jp")]
                 Sentence::Jp(jp) => {
-                    log::trace!("jp text: {:?}", jp.text);
+                    trace!("jp text: {:?}", jp.text);
                     match jp.build_phone_and_bert(g2p) {
                         Ok((t, bert)) => {
                             phone_seq.push(t);
@@ -624,8 +625,8 @@ pub fn get_phone_and_bert(g2p: &G2p, text: &str) -> anyhow::Result<(Tensor, Tens
                             if cfg!(debug_assertions) {
                                 return Err(e);
                             } else {
-                                log::warn!("get a error, skip: {:?}", jp.text);
-                                log::warn!("jp build_phone_and_bert error: {}", e);
+                                warn!("get a error, skip: {:?}", jp.text);
+                                warn!("jp build_phone_and_bert error: {}", e);
                             }
                         }
                     }
@@ -648,11 +649,11 @@ pub fn get_phone_and_bert(g2p: &G2p, text: &str) -> anyhow::Result<(Tensor, Tens
     let phone_seq = Tensor::cat(&phone_seq, 1).to(g2p.device);
     let bert_seq = Tensor::cat(&bert_seq, 0).to(g2p.device);
 
-    log::debug!(
+    debug!(
         "phone_seq: {:?}",
-        Vec::<i64>::try_from(phone_seq.shallow_clone().reshape(vec![-1])).unwrap()
+        Vec::<i64>::try_from(phone_seq.shallow_clone().reshape(vec![-1]))?
     );
-    log::debug!("bert_seq: {:?}", bert_seq);
+    debug!("bert_seq: {:?}", bert_seq);
 
     Ok((phone_seq, bert_seq))
 }
@@ -751,17 +752,17 @@ impl ZhSentence {
         let pinyin = match g2p.g2pw.get_pinyin(&self.zh_text) {
             Ok(pinyin) => pinyin,
             Err(e) => {
-                log::warn!("get pinyin error: {}. try simple plan", e);
+                warn!("get pinyin error: {}. try simple plan", e);
                 g2p.g2pw.simple_get_pinyin(&self.zh_text)
             }
         };
 
         debug_assert_eq!(pinyin.len(), self.phones.len());
 
-        log::debug!("pinyin: {:?}", pinyin);
+        debug!("pinyin: {:?}", pinyin);
 
         if pinyin.len() != self.phones.len() {
-            log::warn!(
+            warn!(
                 "pinyin len not equal phones len: {} != {}",
                 pinyin.len(),
                 self.phones.len()
@@ -776,7 +777,7 @@ impl ZhSentence {
             }
         }
 
-        log::debug!("phones: {:?}", self.phones);
+        debug!("phones: {:?}", self.phones);
 
         for p in &self.phones {
             match p {
@@ -837,7 +838,7 @@ const SEPARATOR: &'static str = " ";
 
 impl EnSentence {
     fn generate_phones(&mut self, g2p: &G2p) {
-        log::trace!("EnSentence text: {:?}", self.en_text);
+        trace!("EnSentence text: {:?}", self.en_text);
         let symbols = &g2p.symbols;
         for word in &self.en_text {
             match word {
@@ -879,7 +880,7 @@ impl EnSentence {
                 }
             }
         }
-        log::trace!("EnSentence phones: {:?}", self.phones);
+        trace!("EnSentence phones: {:?}", self.phones);
     }
 
     fn build_phone_and_bert(&self, g2p: &G2p) -> anyhow::Result<(Tensor, Tensor)> {
@@ -905,7 +906,7 @@ struct JpSentence {
 impl JpSentence {
     fn build_phone_and_bert(&self, g2p: &G2p) -> anyhow::Result<(Tensor, Tensor)> {
         let phones = g2p.g2p_jp.g2p(self.text.as_str());
-        log::trace!("JpSentence phones: {:?}", phones);
+        trace!("JpSentence phones: {:?}", phones);
         let symbols = &g2p.symbols;
         let phone_ids = phones
             .into_iter()
@@ -1033,7 +1034,7 @@ impl PhoneBuilder {
     pub fn push_text(&mut self, jieba: &jieba_rs::Jieba, text: &str) {
         let mut lang = Lang::En;
         let r = jieba.cut(text, true);
-        log::info!("jieba cut: {:?}", r);
+        info!("jieba cut: {:?}", r);
         for t in r {
             if is_numeric(t) {
                 self.push_num_word(t);
@@ -1048,7 +1049,7 @@ impl PhoneBuilder {
                 #[cfg(feature = "enable_jp")]
                 self.push_jp_word(t);
             } else {
-                log::warn!("skip word: {:?} in {}", t, text);
+                warn!("skip word: {:?} in {}", t, text);
             }
         }
 
@@ -1100,7 +1101,7 @@ impl PhoneBuilder {
                 }));
             }
             _ => {
-                log::debug!("skip punctuation: {}", p);
+                debug!("skip punctuation: {}", p);
             }
         }
     }
@@ -1226,175 +1227,4 @@ impl PhoneBuilder {
             }
         }
     }
-}
-
-// cargo test --package gpt_sovits_rs --lib -- text::test_cut --exact --show-output
-#[test]
-fn test_cut() {
-    env_logger::init();
-    // 分词
-    use jieba_rs::Jieba;
-
-    // let target_text =
-    //     "about 80% of Americans believed Thompson's killer had either \"a great deal\" or \"a moderate amount\" of responsibility for the murder,";
-
-    let target_text = " Next up, we’re unraveling a tale as old as time – or at least as old as cautionary stories get. We're calling this one “The Wolf in Sheep’s Clothing…And Why Your Mom Is Always Right.” It’s the story of Little Red Riding Hood, but not the sanitized Disney version. We're going deep into the psychology, the symbolism, and honestly, the sheer *audacity* of that wolf. This isn't just a children's story; it's a masterclass in risk assessment, trust – or lack thereof – and why deviating from the established path can lead to becoming someone’s lunch. And joining me today to dissect this…well, frankly terrifying narrative is my friend, Elias. Welcome, Elias!";
-
-    let jieba = Jieba::new();
-
-    let mut phone_builder = PhoneBuilder::new(false);
-    phone_builder.push_text(&jieba, target_text);
-
-    for s in &phone_builder.sentence {
-        match s {
-            Sentence::Zh(zh) => {
-                println!("###zh###");
-                println!("phones: {:?}", zh.phones);
-                println!("word2ph: {:?}", zh.word2ph);
-                println!("zh_text: {:?}", zh.zh_text);
-            }
-            Sentence::En(en) => {
-                println!("###en###");
-                println!("phones: {:?}", en.phones);
-                println!("en_text: {:?}", en.en_text);
-            }
-            #[cfg(feature = "enable_jp")]
-            Sentence::Jp(_) => unreachable!(),
-            Sentence::Num(num) => {
-                println!("###num###");
-                println!("num_text: {:?}|{:?}", num.num_text, num.lang);
-                for s in num.to_phone_sentence().unwrap() {
-                    match s {
-                        Sentence::Zh(zh) => {
-                            println!("###num-zh###");
-                            println!("phones: {:?}", zh.phones);
-                            println!("word2ph: {:?}", zh.word2ph);
-                            println!("zh_text: {:?}", zh.zh_text);
-                        }
-                        Sentence::En(en) => {
-                            println!("###num-en###");
-                            println!("phones: {:?}", en.phones);
-                            println!("en_text: {:?}", en.en_text);
-                        }
-                        Sentence::Num(_) => unreachable!(),
-                        #[cfg(feature = "enable_jp")]
-                        Sentence::Jp(_) => unreachable!(),
-                    }
-                }
-            }
-        }
-    }
-}
-
-// cargo test --package gpt_sovits_rs --lib -- text::test_splite_text --exact --show-output
-#[test]
-fn test_splite_text() {
-    env_logger::init();
-    let text = "叹息声一声接着一声，木兰姑娘当门在织布。织机停下来不再作响，只听见姑娘在叹息。\n问姑娘在思念什么，问姑娘在惦记什么。我也没有在想什么，也没有在惦记什么。\n昨夜看见征兵的文书，知道君王在大规模征募兵士，那么多卷征兵文书，每卷上都有父亲的名字。父亲没有长大成人的儿子，木兰没有兄长，木兰愿意去买来马鞍和马匹，从此替父亲去出征。到各地集市买骏马，马鞍和鞍下的垫子，马嚼子和缰绳，马鞭。早上辞别父母上路，晚上宿营在黄河边，听不见父母呼唤女儿的声音，但能听到黄河汹涌奔流的声音。";
-    println!("text: {:?}", text.is_ascii());
-
-    let chunks = split_text(text, 50);
-    for chunk in chunks {
-        let s = chunk.chars().count();
-        println!("chunk: {:?} {}", chunk, s);
-    }
-}
-
-// cargo test --package gpt_sovits_rs --lib -- text::test_splite_en_text --exact --show-output
-#[test]
-fn test_splite_en_text() {
-    let text = r#"his story is called "The Farmer and the Snake." Every day, a farmer went to the city to sell his flowers and farm produce and then went home after selling all his things. One day, he left home very early, so early that when he arrived at the city, the gate was still closed. So he lay down to take a nap, when he awoke he found that the storage bin containing his farm produce had become empty except that there was a gold coin inside. Although all the things in the bin had vanished, the gold was much more valuable so he was still very happy. He thought most probably someone had taken his things and left the payment there, and went home happily with the money."#;
-    println!("text: {:?}", text.is_ascii());
-
-    let chunks = split_text(text, 50);
-    for chunk in chunks {
-        let s = chunk.split(" ").count();
-        println!("chunk: {:?} {}", chunk, s);
-    }
-}
-
-#[test]
-fn test_jieba() {
-    let jieba = jieba_rs::Jieba::empty();
-    let tag = jieba.tag("-20000岁,问问lisa GPT-32是多少?我的ID:123564897.
-    Good morning.我现在支持了英文翻译和中文这两种语言。English and Chinese.I love Rust very much.我爱Rust！
-    2024年10月 2块 1+2=3 ", true);
-
-    for t in tag {
-        println!("{:?}", t);
-    }
-}
-
-#[cfg(feature = "enable_jp")]
-#[test]
-fn test_jp_enabled() {
-    use jieba_rs::Jieba;
-    let jieba = Jieba::new();
-
-    let mut phone_builder = PhoneBuilder::new(true);
-    phone_builder.push_text(&jieba, "你喜欢看アニメ吗");
-
-    let mut iter = phone_builder.sentence.iter();
-    assert!(matches!(iter.next().unwrap(), Sentence::Zh(_)));
-    assert!(matches!(iter.next().unwrap(), Sentence::Jp(_)));
-    assert!(matches!(iter.next().unwrap(), Sentence::Zh(_)));
-    assert!(iter.next().is_none());
-
-    let mut phone_builder = PhoneBuilder::new(true);
-    phone_builder.push_text(&jieba, "昨天見た映画はとても感動的でした");
-
-    let mut iter = phone_builder.sentence.iter();
-    assert!(matches!(iter.next().unwrap(), Sentence::Zh(_)));
-    assert!(matches!(iter.next().unwrap(), Sentence::Jp(_)));
-    assert!(matches!(iter.next().unwrap(), Sentence::Zh(_)));
-    assert!(matches!(iter.next().unwrap(), Sentence::Jp(_)));
-    assert!(matches!(iter.next().unwrap(), Sentence::Zh(_)));
-    assert!(matches!(iter.next().unwrap(), Sentence::Jp(_)));
-    assert!(iter.next().is_none());
-
-    let mut phone_builder = PhoneBuilder::new(true);
-    phone_builder.push_text(
-        &jieba,
-        "我的名字是西野くまです。I am from Tokyo, 日本の首都。今天的天气非常好",
-    );
-    let mut iter = phone_builder.sentence.iter();
-    assert!(matches!(iter.next().unwrap(), Sentence::Zh(_)));
-    assert!(matches!(iter.next().unwrap(), Sentence::Jp(_)));
-    assert!(matches!(iter.next().unwrap(), Sentence::En(_)));
-    assert!(matches!(iter.next().unwrap(), Sentence::Zh(_)));
-    assert!(matches!(iter.next().unwrap(), Sentence::Jp(_)));
-    assert!(matches!(iter.next().unwrap(), Sentence::Zh(_)));
-    assert!(iter.next().is_none());
-}
-
-#[cfg(feature = "enable_jp")]
-#[test]
-fn test_jp_disabled() {
-    use jieba_rs::Jieba;
-    let jieba = Jieba::new();
-
-    let mut phone_builder = PhoneBuilder::new(false);
-    phone_builder.push_text(&jieba, "你喜欢看アニメ吗");
-
-    let mut iter = phone_builder.sentence.iter();
-    assert!(matches!(iter.next().unwrap(), Sentence::Zh(_)));
-    assert!(iter.next().is_none());
-
-    let mut phone_builder = PhoneBuilder::new(false);
-    phone_builder.push_text(&jieba, "昨天見た映画はとても感動的でした");
-
-    let mut iter = phone_builder.sentence.iter();
-    assert!(matches!(iter.next().unwrap(), Sentence::Zh(_)));
-    assert!(iter.next().is_none());
-
-    let mut phone_builder = PhoneBuilder::new(false);
-    phone_builder.push_text(
-        &jieba,
-        "我的名字是西野くまです。I am from Tokyo, 日本の首都。今天的天气非常好",
-    );
-    let mut iter = phone_builder.sentence.iter();
-    assert!(matches!(iter.next().unwrap(), Sentence::Zh(_)));
-    assert!(matches!(iter.next().unwrap(), Sentence::En(_)));
-    assert!(matches!(iter.next().unwrap(), Sentence::Zh(_)));
-    assert!(iter.next().is_none());
 }

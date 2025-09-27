@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use anyhow::Ok;
 use tch::{Device, IValue, Tensor};
+use tracing::debug;
 
 pub struct T2S {
     pub file_path: String,
@@ -15,7 +16,7 @@ impl T2S {
     pub const EOS: i64 = 1024;
     pub fn new(file_path: &str, device: Device) -> anyhow::Result<Self> {
         let mut model = tch::CModule::load_on_device(file_path, device).map_err(|e| {
-            log::debug!("Failed to load T2S model from {}: {}", file_path, e);
+            debug!("Failed to load T2S model from {}: {}", file_path, e);
             anyhow::anyhow!("Failed to load T2S model from {}", file_path)
         })?;
         model.set_eval();
@@ -47,7 +48,7 @@ impl T2S {
                 ],
             )
             .map_err(|e| {
-                log::debug!("Failed to pre-infer T2S model: {}", e);
+                debug!("Failed to pre-infer T2S model: {}", e);
                 anyhow::anyhow!("Failed to pre-infer T2S model")
             })?;
         if let IValue::Tuple(mut result) = result {
@@ -113,7 +114,7 @@ impl T2S {
                 &IValue::TensorList(v_cache),
             ])
             .map_err(|e| {
-                log::debug!("Failed to decode next token in T2S model: {}", e);
+                debug!("Failed to decode next token in T2S model: {}", e);
                 anyhow::anyhow!("Failed to decode next token in T2S model")
             })?;
         if let IValue::Tuple(mut result) = result {
@@ -167,7 +168,7 @@ unsafe impl Sync for Vits {}
 impl Vits {
     pub fn new(file_path: &str, device: Device) -> anyhow::Result<Self> {
         let mut model = tch::CModule::load_on_device(file_path, device).map_err(|e| {
-            log::debug!("Failed to load VITS model from {}: {}", file_path, e);
+            debug!("Failed to load VITS model from {}: {}", file_path, e);
             anyhow::anyhow!("Failed to load VITS model from {}", file_path)
         })?;
         model.set_eval();
@@ -181,7 +182,7 @@ impl Vits {
             .model
             .method_is("ref_handle", &[&IValue::Tensor(ref_audio_32k)])
             .map_err(|e| {
-                log::debug!("Failed to handle reference in VITS model: {}", e);
+                debug!("Failed to handle reference in VITS model: {}", e);
                 anyhow::anyhow!("Failed to handle reference in VITS model")
             })?;
         if let IValue::Tuple(mut result) = result {
@@ -212,7 +213,7 @@ impl Vits {
             .model
             .method_ts("extract_latent", &[ssl_content])
             .map_err(|e| {
-                log::debug!("Failed to extract latent in VITS model: {}", e);
+                debug!("Failed to extract latent in VITS model: {}", e);
                 anyhow::anyhow!("Failed to extract latent in VITS model")
             })?;
         Ok(r)
@@ -229,7 +230,7 @@ impl Vits {
             .model
             .forward_ts(&[pred_semantic, text_seq, refer, sv_emb])
             .map_err(|e| {
-                log::debug!("Failed to generate in VITS model: {}", e);
+                debug!("Failed to generate in VITS model: {}", e);
                 anyhow::anyhow!("Failed to generate in VITS model")
             })?;
         Ok(r)
@@ -246,7 +247,7 @@ unsafe impl Sync for SSL {}
 impl SSL {
     pub fn new(file_path: &str, device: Device) -> anyhow::Result<Self> {
         let mut ssl = tch::CModule::load_on_device(file_path, device).map_err(|e| {
-            log::debug!("Failed to load SSL model from {}: {}", file_path, e);
+            debug!("Failed to load SSL model from {}: {}", file_path, e);
             anyhow::anyhow!("Failed to load SSL model from {}", file_path)
         })?;
         ssl.set_eval();
@@ -256,7 +257,7 @@ impl SSL {
     /// return: ssl_content
     pub fn to_ssl_content(&self, audio_16k: Tensor) -> anyhow::Result<Tensor> {
         let r = self.ssl.forward_ts(&[audio_16k]).map_err(|e| {
-            log::debug!("Failed to forward SSL model: {}", e);
+            debug!("Failed to forward SSL model: {}", e);
             anyhow::anyhow!("Failed to forward SSL model")
         })?;
         Ok(r)
@@ -275,7 +276,7 @@ impl SSL {
                     ],
                 )
                 .map_err(|e| {
-                    log::debug!("Failed to resample audio: {}", e);
+                    debug!("Failed to resample audio: {}", e);
                     anyhow::anyhow!("Failed to resample audio")
                 })?;
             match resample {
@@ -358,7 +359,7 @@ impl SpeakerV2Pro {
 
         let mut i = 1500;
         for idx in 1..1500 {
-            // log::debug!("Decoding next token: idx={}/1500", idx);
+            // debug!("Decoding next token: idx={}/1500", idx);
             let (y_, xy_pos_, last_token, k_cache_, v_cache_) = self
                 .t2s
                 .decode_next_token(idx, top_k, y_len, y, xy_pos, k_cache, v_cache)?;

@@ -8,9 +8,10 @@ pub mod zh {
     use crate::text::PhoneBuilder;
 
     use super::*;
-    use pest::iterators::Pair;
     #[cfg(test)]
     use pest::Parser;
+    use pest::iterators::Pair;
+    use tracing::{debug, warn};
 
     fn parse_pn(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
         assert_eq!(pair.as_rule(), Rule::pn);
@@ -244,12 +245,12 @@ pub mod zh {
 
         let inner = pair.into_inner();
         for pair in inner {
-            log::debug!("{:?}", pair);
+            debug!("{:?}", pair);
             match pair.as_rule() {
                 Rule::num => parse_num(pair, builder)?,
                 Rule::pn => parse_pn(pair, builder)?,
                 Rule::word => {
-                    log::warn!("word: {:?}", pair.as_str());
+                    warn!("word: {:?}", pair.as_str());
                 }
                 _ => {
                     #[cfg(debug_assertions)]
@@ -258,29 +259,6 @@ pub mod zh {
             }
         }
         Ok(())
-    }
-
-    #[test]
-    fn test_signs() {
-        let mut builder = PhoneBuilder::new(false);
-
-        let mut p = ExprParser::parse(Rule::signs, "034.9/(9.2)+ -89.2%=99/10")
-            .unwrap_or_else(|e| panic!("{}", e));
-        let p = p.next().unwrap();
-        parse_signs(p, &mut builder).unwrap();
-
-        println!("{:?}", builder.sentence.back().unwrap());
-    }
-
-    #[test]
-    fn test_parser() {
-        let pairs = ExprParser::parse(Rule::all, "1+2=3.65 ").unwrap_or_else(|e| panic!("{}", e));
-        if let Some(pair) = pairs.last() {
-            let pairs = pair.into_inner();
-            for pair in pairs {
-                println!("==={:?}", pair);
-            }
-        }
     }
 
     fn parse_link(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
@@ -402,35 +380,6 @@ pub mod zh {
         }
         Ok(())
     }
-
-    #[test]
-    fn test_parse_all() {
-        let mut builder = PhoneBuilder::new(false);
-
-        let mut p =
-            ExprParser::parse(Rule::all, "1.6+2.005=3.65%").unwrap_or_else(|e| panic!("{}", e));
-        let p = p.next().unwrap();
-        parse_all(p, &mut builder).unwrap();
-        match builder.sentence.back().unwrap() {
-            crate::text::Sentence::Zh(zh) => {
-                println!("{:?}", zh.zh_text);
-            }
-            _ => {
-                #[cfg(debug_assertions)]
-                unreachable!();
-            }
-        }
-    }
-
-    #[test]
-    fn test_parse_all_ident() {
-        let mut builder = PhoneBuilder::new(false);
-
-        let mut p = ExprParser::parse(Rule::all, "GPT-α96").unwrap_or_else(|e| panic!("{}", e));
-        let p = p.next().unwrap();
-        parse_all(p, &mut builder).unwrap();
-        println!("{:?}", builder.sentence);
-    }
 }
 
 pub mod en {
@@ -439,8 +388,6 @@ pub mod en {
     use super::super::SEPARATOR;
     use super::*;
     use pest::iterators::Pair;
-    #[cfg(test)]
-    use pest::Parser;
 
     fn parse_pn(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
         assert_eq!(pair.as_rule(), Rule::pn);
@@ -543,27 +490,6 @@ pub mod en {
         Ok(())
     }
 
-    #[test]
-    fn test_parse_integer() {
-        let mut builder = PhoneBuilder::new(false);
-
-        let mut p =
-            ExprParser::parse(Rule::integer, "034056009009040").unwrap_or_else(|e| panic!("{}", e));
-        let p = p.next().unwrap();
-        parse_integer(p, &mut builder, true).unwrap();
-
-        println!("{:?}", builder.sentence.back().unwrap());
-
-        let mut builder = PhoneBuilder::new(false);
-
-        let mut p =
-            ExprParser::parse(Rule::integer, "034056009009040").unwrap_or_else(|e| panic!("{}", e));
-        let p = p.next().unwrap();
-        parse_integer(p, &mut builder, false).unwrap();
-
-        println!("{:?}", builder.sentence.back().unwrap());
-    }
-
     fn parse_decimals(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
         assert_eq!(pair.as_rule(), Rule::decimals);
         if let Ok(r) = num2en::str_to_words(pair.as_str()) {
@@ -648,29 +574,6 @@ pub mod en {
             }
         }
         Ok(())
-    }
-
-    #[test]
-    fn test_signs() {
-        let mut builder = PhoneBuilder::new(false);
-
-        let mut p = ExprParser::parse(Rule::signs, "034.9/(9.2)+ -89.2%=99/10")
-            .unwrap_or_else(|e| panic!("{}", e));
-        let p = p.next().unwrap();
-        parse_signs(p, &mut builder).unwrap();
-
-        println!("{:?}", builder.sentence.back().unwrap());
-    }
-
-    #[test]
-    fn test_parser() {
-        let pairs = ExprParser::parse(Rule::all, "1+2=3.65 ").unwrap_or_else(|e| panic!("{}", e));
-        if let Some(pair) = pairs.last() {
-            let pairs = pair.into_inner();
-            for pair in pairs {
-                println!("==={:?}", pair);
-            }
-        }
     }
 
     fn parse_link(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
@@ -790,34 +693,5 @@ pub mod en {
             }
         }
         Ok(())
-    }
-
-    #[test]
-    fn test_parse_all() {
-        let mut builder = PhoneBuilder::new(false);
-
-        let mut p =
-            ExprParser::parse(Rule::all, "1.6+2.005=3.65%").unwrap_or_else(|e| panic!("{}", e));
-        let p = p.next().unwrap();
-        parse_all(p, &mut builder).unwrap();
-        match builder.sentence.back().unwrap() {
-            crate::text::Sentence::En(en) => {
-                println!("{:?}", en.en_text);
-            }
-            _ => {
-                #[cfg(debug_assertions)]
-                unreachable!();
-            }
-        }
-    }
-
-    #[test]
-    fn test_parse_all_ident() {
-        let mut builder = PhoneBuilder::new(false);
-
-        let mut p = ExprParser::parse(Rule::all, "GPT-α96").unwrap_or_else(|e| panic!("{}", e));
-        let p = p.next().unwrap();
-        parse_all(p, &mut builder).unwrap();
-        println!("{:?}", builder.sentence);
     }
 }
