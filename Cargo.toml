@@ -6,7 +6,6 @@ description = "A GPT_Sovits inference lib in Rust base on libtorch"
 license = "MIT"
 
 [dependencies]
-anyhow = "1.0.87"
 tokenizers = { version = "0.22.0", default-features = false, features = ["onig"] }
 tch = { version = "0.20.0" }
 wav_io = "0.1"
@@ -22,6 +21,7 @@ jpreprocess = { version = "0.12", default-features = false, features = ["naist-j
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", features = ["local-time", "ansi", "fmt", "std"] }
 time = { version = "0.3", default-features = false, features = ["parsing"] }
+thiserror = { version = "2.0", default-features = false }
 
 [features]
 default = []

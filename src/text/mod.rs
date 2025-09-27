@@ -1,3 +1,4 @@
+use crate::error::*;
 use std::{
     borrow::Cow,
     collections::{HashMap, LinkedList},
@@ -18,6 +19,8 @@ pub mod g2pw;
 
 pub mod dict;
 pub mod num;
+
+const SEPARATOR: &str = " ";
 
 pub struct G2PConfig {
     pub cn_setting: Option<(String, String)>,
@@ -44,11 +47,10 @@ impl G2PConfig {
         Self { enable_jp, ..self }
     }
 
-    pub fn build(&self, device: tch::Device) -> anyhow::Result<G2p> {
+    pub fn build(&self, device: tch::Device) -> Result<G2p> {
         let (cn_bert, g2pw) = match &self.cn_setting {
             Some((g2pw_path, cn_bert_path)) => {
-                let tokenizer = Tokenizer::from_str(g2pw::G2PW_TOKENIZER)
-                    .map_err(|e| anyhow::anyhow!("load tokenizer error: {}", e))?;
+                let tokenizer = Tokenizer::from_str(g2pw::G2PW_TOKENIZER)?;
                 let tokenizer = Arc::new(tokenizer);
 
                 let mut bert = tch::CModule::load_on_device(&cn_bert_path, device)?;
@@ -66,7 +68,7 @@ impl G2PConfig {
         Ok(G2p {
             zh_bert: cn_bert,
             g2pw,
-            g2p_en: g2p_en::G2PEnConverter::new(&self.g2p_en_path),
+            g2p_en: g2p_en::G2PEnConverter::new(&self.g2p_en_path)?,
             #[cfg(feature = "enable_jp")]
             g2p_jp: g2p_jp::G2PJpConverter::new(),
             device,
@@ -85,9 +87,7 @@ pub struct G2p {
     g2p_jp: g2p_jp::G2PJpConverter,
     pub device: tch::Device,
     symbols: HashMap<String, i64>,
-
     jieba: jieba_rs::Jieba,
-
     enable_jp: bool,
 }
 
@@ -487,10 +487,7 @@ pub fn split_text(text: &str, max_chunk_size: usize) -> Vec<&str> {
         };
         trace!(
             "s: {:?}, count: {} total_count: {} splite_index: {}",
-            s,
-            count,
-            total_count,
-            splite_index
+            s, count, total_count, splite_index
         );
         if s.chars().count() == 1 {
             splite_index += s.len();
@@ -552,7 +549,7 @@ fn test_split_text() {
 }
 
 /// return: (phone_seq, bert_seq)
-pub fn get_phone_and_bert(g2p: &G2p, text: &str) -> anyhow::Result<(Tensor, Tensor)> {
+pub fn get_phone_and_bert(g2p: &G2p, text: &str) -> Result<(Tensor, Tensor)> {
     let mut phone_seq = Vec::new();
     let mut bert_seq = Vec::new();
 
@@ -567,7 +564,7 @@ pub fn get_phone_and_bert(g2p: &G2p, text: &str) -> anyhow::Result<(Tensor, Tens
         g2p: &G2p,
         phone_seq: &mut Vec<Tensor>,
         bert_seq: &mut Vec<Tensor>,
-    ) -> anyhow::Result<()> {
+    ) -> Result<()> {
         for s in i {
             match s {
                 Sentence::Zh(mut zh) => {
@@ -640,10 +637,14 @@ pub fn get_phone_and_bert(g2p: &G2p, text: &str) -> anyhow::Result<(Tensor, Tens
     helper(phone_builder.sentence, g2p, &mut phone_seq, &mut bert_seq)?;
 
     if phone_seq.is_empty() {
-        return Err(anyhow::anyhow!("{text} get phone_seq is empty"));
+        return Err(NihilityGsvError::FeatureExtraction(format!(
+            "{text} get phone_seq is empty"
+        )));
     }
     if bert_seq.is_empty() {
-        return Err(anyhow::anyhow!("{text} get bert_seq is empty"));
+        return Err(NihilityGsvError::FeatureExtraction(format!(
+            "{text} get bert_seq is empty"
+        )));
     }
 
     let phone_seq = Tensor::cat(&phone_seq, 1).to(g2p.device);
@@ -719,7 +720,7 @@ impl CNBertModel {
         text: &str,
         word2ph: &[i32],
         device: tch::Device,
-    ) -> anyhow::Result<Tensor> {
+    ) -> Result<Tensor> {
         let bert = match self {
             CNBertModel::None => {
                 let len: i32 = word2ph.iter().sum();
@@ -796,11 +797,10 @@ impl ZhSentence {
         }
     }
 
-    fn build_phone_and_bert(&self, g2p: &G2p) -> anyhow::Result<(Tensor, Tensor)> {
+    fn build_phone_and_bert(&self, g2p: &G2p) -> Result<(Tensor, Tensor)> {
         let bert = g2p
             .zh_bert
-            .get_text_bert(&self.zh_text, &self.word2ph, g2p.device)
-            .map_err(|e| anyhow::anyhow!("get_text_bert error: {}", e))?;
+            .get_text_bert(&self.zh_text, &self.word2ph, g2p.device)?;
 
         let t = Tensor::from_slice(&self.phones_ids)
             .to_device(g2p.device)
@@ -833,8 +833,6 @@ struct EnSentence {
     phones: Vec<Cow<'static, str>>,
     en_text: Vec<EnWord>,
 }
-
-const SEPARATOR: &'static str = " ";
 
 impl EnSentence {
     fn generate_phones(&mut self, g2p: &G2p) {
@@ -883,7 +881,7 @@ impl EnSentence {
         trace!("EnSentence phones: {:?}", self.phones);
     }
 
-    fn build_phone_and_bert(&self, g2p: &G2p) -> anyhow::Result<(Tensor, Tensor)> {
+    fn build_phone_and_bert(&self, g2p: &G2p) -> Result<(Tensor, Tensor)> {
         let t = Tensor::from_slice(&self.phones_ids)
             .to_device(g2p.device)
             .unsqueeze(0);
@@ -904,7 +902,7 @@ struct JpSentence {
 
 #[cfg(feature = "enable_jp")]
 impl JpSentence {
-    fn build_phone_and_bert(&self, g2p: &G2p) -> anyhow::Result<(Tensor, Tensor)> {
+    fn build_phone_and_bert(&self, g2p: &G2p) -> Result<(Tensor, Tensor)> {
         let phones = g2p.g2p_jp.g2p(self.text.as_str());
         trace!("JpSentence phones: {:?}", phones);
         let symbols = &g2p.symbols;
@@ -944,7 +942,7 @@ impl NumSentence {
         self.num_text == "-"
     }
 
-    fn to_phone_sentence(&self) -> anyhow::Result<LinkedList<Sentence>> {
+    fn to_phone_sentence(&self) -> Result<LinkedList<Sentence>> {
         // match self.lang {
         //     Lang::Zh => text::num_to_zh_text(symbols, &self.num_text, last_char_is_punctuation),
         //     Lang::En => text::num_to_en_text(symbols, &self.num_text, last_char_is_punctuation),

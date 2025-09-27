@@ -1,3 +1,4 @@
+use crate::error::*;
 use std::collections::LinkedList;
 
 #[derive(pest_derive::Parser)]
@@ -13,7 +14,7 @@ pub mod zh {
     use pest::iterators::Pair;
     use tracing::{debug, warn};
 
-    fn parse_pn(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_pn(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::pn);
         match pair.as_str() {
             "+" => builder.push_zh_word("加"),
@@ -29,7 +30,7 @@ pub mod zh {
         Ok(())
     }
 
-    fn parse_flag(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_flag(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::flag);
         match pair.as_str() {
             "+" => builder.push_zh_word("正"),
@@ -42,7 +43,7 @@ pub mod zh {
         Ok(())
     }
 
-    fn parse_percent(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_percent(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::percent);
         // percent = { (decimals|integer)~"%" }
 
@@ -70,7 +71,7 @@ pub mod zh {
         pair: Pair<Rule>,
         builder: &mut PhoneBuilder,
         unit: bool,
-    ) -> anyhow::Result<LinkedList<(&'static str, &'static str)>> {
+    ) -> Result<LinkedList<(&'static str, &'static str)>> {
         assert_eq!(pair.as_rule(), Rule::integer);
 
         let mut r: LinkedList<(&str, &str)> = LinkedList::new();
@@ -185,7 +186,7 @@ pub mod zh {
         println!("{:?}", builder.sentence.pop_back().unwrap());
     }
 
-    fn parse_decimals(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_decimals(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::decimals);
 
         let mut inner = pair.into_inner().rev();
@@ -201,7 +202,7 @@ pub mod zh {
         Ok(())
     }
 
-    fn parse_fractional(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_fractional(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::fractional);
 
         let mut inner = pair.into_inner();
@@ -214,7 +215,7 @@ pub mod zh {
         Ok(())
     }
 
-    fn parse_num(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_num(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::num);
 
         let inner = pair.into_inner();
@@ -240,7 +241,7 @@ pub mod zh {
         Ok(())
     }
 
-    fn parse_signs(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_signs(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::signs);
 
         let inner = pair.into_inner();
@@ -261,7 +262,7 @@ pub mod zh {
         Ok(())
     }
 
-    fn parse_link(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_link(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::link);
 
         match pair.as_str() {
@@ -272,7 +273,7 @@ pub mod zh {
         Ok(())
     }
 
-    fn parse_word(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_word(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::word);
         let inner = pair.into_inner();
         for pair in inner {
@@ -347,7 +348,7 @@ pub mod zh {
         Ok(())
     }
 
-    fn parse_ident(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_ident(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::ident);
 
         let inner = pair.into_inner();
@@ -364,7 +365,7 @@ pub mod zh {
         Ok(())
     }
 
-    pub fn parse_all(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    pub fn parse_all(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::all);
 
         let inner = pair.into_inner();
@@ -389,7 +390,7 @@ pub mod en {
     use super::*;
     use pest::iterators::Pair;
 
-    fn parse_pn(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_pn(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::pn);
         match pair.as_str() {
             "+" => builder.push_en_word("plus"),
@@ -411,7 +412,7 @@ pub mod en {
         Ok(())
     }
 
-    fn parse_flag(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_flag(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::flag);
         match pair.as_str() {
             "-" => builder.push_en_word("negative"),
@@ -424,7 +425,7 @@ pub mod en {
         Ok(())
     }
 
-    fn parse_percent(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_percent(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::percent);
         // percent = { (decimals|integer)~"%" }
 
@@ -447,11 +448,7 @@ pub mod en {
         Ok(())
     }
 
-    fn parse_integer(
-        pair: Pair<Rule>,
-        builder: &mut PhoneBuilder,
-        unit: bool,
-    ) -> anyhow::Result<()> {
+    fn parse_integer(pair: Pair<Rule>, builder: &mut PhoneBuilder, unit: bool) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::integer);
         if unit {
             if let Ok(r) = num2en::str_to_words(pair.as_str()) {
@@ -490,7 +487,7 @@ pub mod en {
         Ok(())
     }
 
-    fn parse_decimals(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_decimals(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::decimals);
         if let Ok(r) = num2en::str_to_words(pair.as_str()) {
             r.split(&[' ', '-']).for_each(|s| {
@@ -516,7 +513,7 @@ pub mod en {
         Ok(())
     }
 
-    fn parse_fractional(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_fractional(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::fractional);
 
         let mut inner = pair.into_inner();
@@ -530,7 +527,7 @@ pub mod en {
         Ok(())
     }
 
-    fn parse_num(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_num(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::num);
 
         let inner = pair.into_inner();
@@ -556,7 +553,7 @@ pub mod en {
         Ok(())
     }
 
-    fn parse_signs(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_signs(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::signs);
 
         let inner = pair.into_inner();
@@ -576,7 +573,7 @@ pub mod en {
         Ok(())
     }
 
-    fn parse_link(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_link(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::link);
 
         builder.push_punctuation(super::super::SEPARATOR);
@@ -584,7 +581,7 @@ pub mod en {
         Ok(())
     }
 
-    fn parse_word(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_word(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::word);
         let inner = pair.into_inner();
         for pair in inner {
@@ -661,7 +658,7 @@ pub mod en {
         Ok(())
     }
 
-    fn parse_ident(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    fn parse_ident(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::ident);
 
         let inner = pair.into_inner();
@@ -678,7 +675,7 @@ pub mod en {
         Ok(())
     }
 
-    pub fn parse_all(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> anyhow::Result<()> {
+    pub fn parse_all(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::all);
 
         let inner = pair.into_inner();

@@ -1,5 +1,6 @@
 // model from cisco-ai/mini-bart-g2p
 
+use crate::error::*;
 use std::{str::FromStr, sync::Arc};
 
 static MINI_BART_G2P_TOKENIZER: &str = include_str!("../../resource/tokenizer.mini-bart-g2p.json");
@@ -22,34 +23,27 @@ pub struct G2PEnConverter {
 }
 
 impl G2PEnConverter {
-    pub fn new(model_path: &str) -> Self {
+    pub fn new(model_path: &str) -> Result<Self> {
         let device = tch::Device::Cpu;
         Self::new_with_device(model_path, device)
     }
 
-    fn new_with_device(model_path: &str, device: tch::Device) -> Self {
-        let tokenizer = tokenizers::Tokenizer::from_str(MINI_BART_G2P_TOKENIZER)
-            .map_err(|e| anyhow::anyhow!("load g2p_en tokenizer error: {}", e))
-            .unwrap();
+    fn new_with_device(model_path: &str, device: tch::Device) -> Result<Self> {
+        let tokenizer = tokenizers::Tokenizer::from_str(MINI_BART_G2P_TOKENIZER)?;
         let tokenizer = Arc::new(tokenizer);
 
-        let mut model = tch::CModule::load_on_device(model_path, device)
-            .map_err(|e| anyhow::anyhow!("load g2p_en model error: {}", e))
-            .unwrap();
+        let mut model = tch::CModule::load_on_device(model_path, device)?;
         model.set_eval();
 
-        Self {
+        Ok(Self {
             model: Arc::new(model),
             tokenizer,
             device,
-        }
+        })
     }
 
-    pub fn get_phoneme(&self, text: &str) -> anyhow::Result<String> {
-        let c = self
-            .tokenizer
-            .encode(text, true)
-            .map_err(|e| anyhow::anyhow!("encode error: {}", e))?;
+    pub fn get_phoneme(&self, text: &str) -> Result<String> {
+        let c = self.tokenizer.encode(text, true)?;
         let input_ids = c.get_ids().iter().map(|x| *x as i64).collect::<Vec<i64>>();
         let mut decoder_input_ids = vec![DECODER_START_TOKEN_ID as i64];
 
@@ -61,10 +55,7 @@ impl G2PEnConverter {
                 .to_device(self.device)
                 .unsqueeze(0);
 
-            let output = self
-                .model
-                .forward_ts(&[input, decoder_input])
-                .map_err(|e| anyhow::anyhow!("g2p_en forward error: {}", e))?;
+            let output = self.model.forward_ts(&[input, decoder_input])?;
 
             let next_token_logits = output.get(0).get(-1);
 
@@ -79,23 +70,6 @@ impl G2PEnConverter {
             .iter()
             .map(|x| *x as u32)
             .collect::<Vec<u32>>();
-        Ok(self
-            .tokenizer
-            .decode(&decoder_input_ids, true)
-            .map_err(|e| anyhow::anyhow!("g2p_en decode error: {}", e))?)
+        Ok(self.tokenizer.decode(&decoder_input_ids, true)?)
     }
-}
-
-// cargo test --package gpt_sovits_rs --lib -- text::g2p_en::test_g2p_en_converter --exact --show-output
-#[test]
-fn test_g2p_en_converter() {
-    let g2p_en = G2PEnConverter::new("./resource/mini-bart-g2p.pt");
-    let phoneme = g2p_en.get_phoneme("a hello world").unwrap();
-    println!("{}", phoneme);
-    let phoneme = g2p_en.get_phoneme("hello world").unwrap();
-    println!("{}", phoneme);
-    let phoneme = g2p_en.get_phoneme("a").unwrap();
-    println!("{}", phoneme);
-    let phoneme = g2p_en.get_phoneme("near-team").unwrap();
-    println!("{}", phoneme);
 }

@@ -1,4 +1,5 @@
 use std::{collections::HashMap, fmt::Debug, sync::Arc};
+use crate::error::*;
 
 static MONO_CHARS_DIST_STR: &str = include_str!("../../resource/g2pw/dict_mono_chars.json");
 static POLY_CHARS_DIST_STR: &str = include_str!("../../resource/g2pw/dict_poly_chars.json");
@@ -332,7 +333,7 @@ impl G2PWConverter {
         }
     }
 
-    pub fn new(model_path: &str, tokenizer: Arc<tokenizers::Tokenizer>) -> anyhow::Result<Self> {
+    pub fn new(model_path: &str, tokenizer: Arc<tokenizers::Tokenizer>) -> Result<Self> {
         let device = tch::Device::Cpu;
         Self::new_with_device(model_path, tokenizer, device)
     }
@@ -341,7 +342,7 @@ impl G2PWConverter {
         model_path: &str,
         tokenizer: Arc<tokenizers::Tokenizer>,
         mut device: tch::Device,
-    ) -> anyhow::Result<Self> {
+    ) -> Result<Self> {
         if device == tch::Device::Mps {
             device = tch::Device::Cpu;
         }
@@ -356,7 +357,7 @@ impl G2PWConverter {
         })
     }
 
-    pub fn get_pinyin<'s>(&self, text: &'s str) -> anyhow::Result<Vec<G2PWOut>> {
+    pub fn get_pinyin(&self, text: &str) -> Result<Vec<G2PWOut>> {
         if self.model.is_some() && self.tokenizers.is_some() {
             self.ml_get_pinyin(text)
         } else {
@@ -378,13 +379,12 @@ impl G2PWConverter {
         pre_data
     }
 
-    fn ml_get_pinyin<'s>(&self, text: &'s str) -> anyhow::Result<Vec<G2PWOut>> {
+    fn ml_get_pinyin(&self, text: &str) -> Result<Vec<G2PWOut>> {
         let c = self
             .tokenizers
             .as_ref()
             .unwrap()
-            .encode(text, true)
-            .map_err(|e| anyhow::anyhow!("encode error: {}", e))?;
+            .encode(text, true)?;
         let input_ids = c.get_ids().iter().map(|x| *x as i64).collect::<Vec<i64>>();
         let token_type_ids = vec![0i64; input_ids.len()];
         let attention_mask = vec![1i64; input_ids.len()];
