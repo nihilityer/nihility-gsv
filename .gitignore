@@ -18,5 +18,5 @@ target/
 .idea/
 model
 ref
-out
+output
 Cargo.lock

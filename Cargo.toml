@@ -5,24 +5,30 @@ edition = "2024"
 description = "A GPT_Sovits inference lib in Rust base on libtorch"
 license = "MIT"
 
-[dependencies]
-tokenizers = { version = "0.22.0", default-features = false, features = ["onig"] }
-tch = { version = "0.20.0" }
-wav_io = "0.1"
-serde_json = "1.0"
-jieba-rs = { version = "0.8", features = ["tfidf", "textrank"] }
-num2en = "1.0.0"
-lazy_static = "1.5"
-pest = "2.8"
-pest_derive = "2.8"
-serde = { version = "1.0", features = ["derive"] }
-jpreprocess = { version = "0.12", default-features = false, features = ["naist-jdic"], optional = true }
-
-tracing = { version = "0.1" }
-tracing-subscriber = { version = "0.3", features = ["local-time", "ansi", "fmt", "std"] }
-time = { version = "0.3", default-features = false, features = ["parsing"] }
-thiserror = { version = "2.0", default-features = false }
+[[bin]]
+name = "nihility-gsv"
+path = "bin/cli.rs"
 
 [features]
 default = []
 enable_jp = ["jpreprocess"]
+
+[dependencies]
+tokenizers = { version = "0.22.0", default-features = false, features = ["onig"] }
+tch = { version = "0.20.0" }
+wav_io = "0.1"
+jieba-rs = { version = "0.8", features = ["tfidf", "textrank"] }
+num2en = "1.0.0"
+pest = "2.8"
+pest_derive = "2.8"
+serde_json = "1.0"
+jpreprocess = { version = "0.12", default-features = false, features = ["naist-jdic"], optional = true }
+
+clap = { version = "4.5", features = ["derive"] }
+time = { version = "0.3", default-features = false, features = ["parsing"] }
+tracing = { version = "0.1" }
+tracing-subscriber = { version = "0.3", features = ["local-time", "ansi", "fmt", "std"] }
+thiserror = { version = "2.0", default-features = false }
+serde = { version = "1.0", features = ["derive"] }
+lazy_static = { version = "1.5" }
+chrono = { version = "0.4", features = ["clock"] }
