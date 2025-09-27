@@ -9,3 +9,8 @@
 ```bash
 nihility-gsv -t '心有所向，日复一日，必有精进。'
 ```
+
+# TODO
+
+- [ ] 推理api接口
+- [ ] 推理GUI
