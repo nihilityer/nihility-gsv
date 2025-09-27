@@ -1,9 +1,10 @@
 use chrono::Local;
 use clap::Parser;
-use nihility_gsv::{gsv, tch, text, text::G2PConfig};
+use nihility_gsv::gsv::Gsv;
+use nihility_gsv::ssl::SSL;
+use nihility_gsv::{tch, text, text::G2PConfig};
 use std::fs;
 use std::path::Path;
-use std::sync::Arc;
 use time::format_description::well_known::Iso8601;
 use tracing::metadata::LevelFilter;
 use tracing::{error, info};
@@ -16,8 +17,6 @@ const G2P_EN_MODEL: &str = "g2p-en.pt";
 const G2P_ZH_MODEL: &str = "g2p-zh.pt";
 const BERT_MODEL: &str = "bert.pt";
 const SSL_MODEL: &str = "ssl.pt";
-const T2S_MODEL: &str = "t2s.pt";
-const VITS_MODEL: &str = "vits.pt";
 const REF_PATH: &str = "ref.wav";
 const REF_TEXT: &str = "ref.txt";
 
@@ -49,15 +48,18 @@ fn main() {
         )
         .init();
 
+    let device = tch::Device::cuda_if_available();
+    info!("use torch device: {:?}", device);
+
     info!("check config: {:?}", &args);
     let base_model_dir = Path::new(&args.base_model_dir);
-    let gsv_model_dir = Path::new(&args.gsv_model_dir);
-    let gsv_model = gsv_model_dir.join(&args.model);
+    let gsv_base_dir = Path::new(&args.gsv_model_dir);
+    let gsv_base = gsv_base_dir.join(&args.model);
     if !base_model_dir.exists() {
         error!("Base model dir does not exist");
         return;
     }
-    if !gsv_model.exists() {
+    if !gsv_base.exists() {
         error!("GSV model does not exist");
         return;
     }
@@ -105,38 +107,31 @@ fn main() {
     }
     let ssl_path = ssl_path.to_str().expect("ssl path exception").to_string();
 
-    let ref_path = gsv_model.join(REF_PATH);
+    let ref_path = gsv_base.join(REF_PATH);
     if !ref_path.exists() {
         error!("Ref audio does not exist");
         return;
     }
     let ref_path = ref_path.to_str().expect("Ref audio exception").to_string();
 
-    let ref_text = gsv_model.join(REF_TEXT);
+    let ref_text = gsv_base.join(REF_TEXT);
     if !ref_text.exists() {
         error!("Ref text does not exist");
         return;
     }
     let ref_text = fs::read_to_string(&ref_text).expect("Ref text exception");
 
-    let t2s_path = gsv_model.join(T2S_MODEL);
-    if !t2s_path.exists() {
+    let gsv_model_path = gsv_base.join("model.pt");
+    if !gsv_model_path.exists() {
         error!("T2S model does not exist");
         return;
     }
-    let t2s_path = t2s_path.to_str().expect("T2S path exception").to_string();
-
-    let vits_path = gsv_model.join(VITS_MODEL);
-    if !vits_path.exists() {
-        error!("VITS model does not exist");
-        return;
-    }
-    let vits_path = vits_path.to_str().expect("VITS path exception").to_string();
+    let gsv_model_path = gsv_model_path
+        .to_str()
+        .expect("T2S path exception")
+        .to_string();
 
     let g2p_conf = G2PConfig::new(g2p_en_path).with_chinese(g2p_zh_path, bert_path);
-
-    let device = tch::Device::cuda_if_available();
-    info!("use torch device: {:?}", device);
 
     let g2p = g2p_conf.build(device).expect("failed to build g2p");
 
@@ -162,30 +157,33 @@ fn main() {
 
     let header = wav_io::new_header(32000, 16, false, true);
 
-    let ssl = gsv::SSL::new(&ssl_path, device).unwrap();
-    let t2s = gsv::T2S::new(&t2s_path, device).unwrap();
-    let vits = gsv::Vits::new(&vits_path, device).unwrap();
+    let ssl = SSL::new(&ssl_path, device).unwrap();
 
-    let speaker = gsv::SpeakerV2Pro::new(&args.model, Arc::new(t2s), Arc::new(vits), Arc::new(ssl));
+    let ref_audio_16k = ssl
+        .resample(&ref_audio_32k, 32000, 16000)
+        .expect("failed to resample audio");
 
-    let (prompts, refer, sv_emb) = speaker
-        .pre_handle_ref(ref_audio_32k)
-        .expect("Failed to pre handle ref");
+    let mut ssl_content = ssl
+        .to_ssl_content(&ref_audio_16k)
+        .expect("failed to get SSL content");
+
+    if ref_audio_32k.kind() == tch::Kind::Half {
+        ssl_content = ssl_content.internal_cast_half(false);
+    }
+
+    let gsv_model = Gsv::new(
+        &gsv_model_path,
+        device,
+        ssl_content,
+        ref_audio_32k,
+        ref_seq,
+        ref_bert,
+    )
+    .expect("failed to create Gsv model");
 
     let st = std::time::Instant::now();
-    let audio = speaker
-        .infer(
-            (
-                prompts.shallow_clone(),
-                refer.shallow_clone(),
-                sv_emb.shallow_clone(),
-            ),
-            ref_seq.shallow_clone(),
-            text_seq.shallow_clone(),
-            ref_bert.shallow_clone(),
-            text_bert.shallow_clone(),
-            15,
-        )
+    let audio = gsv_model
+        .infer(&text_seq, &text_bert, 15)
         .expect("failed to infer audio");
     info!("infer done, cost: {:?}", st.elapsed());
 

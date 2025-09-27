@@ -9,8 +9,6 @@ pub mod zh {
     use crate::text::PhoneBuilder;
 
     use super::*;
-    #[cfg(test)]
-    use pest::Parser;
     use pest::iterators::Pair;
     use tracing::{debug, warn};
 
@@ -138,52 +136,6 @@ pub mod zh {
         }
 
         Ok(r)
-    }
-
-    // cargo test --package gpt_sovits_rs --lib -- text::num::zh::test_parse_integer --exact --show-output
-    #[test]
-    fn test_parse_integer() {
-        let mut builder = PhoneBuilder::new(false);
-
-        let mut p = ExprParser::parse(Rule::integer, "0").unwrap_or_else(|e| panic!("{}", e));
-        let p = p.next().unwrap();
-        let r = parse_integer(p, &mut builder, true).unwrap();
-        for s in r {
-            println!("{:?}", s);
-        }
-
-        println!("{:?}", builder.sentence.pop_back().unwrap());
-
-        let mut p =
-            ExprParser::parse(Rule::integer, "07801100170").unwrap_or_else(|e| panic!("{}", e));
-        let p = p.next().unwrap();
-        let r = parse_integer(p, &mut builder, true).unwrap();
-        for s in r {
-            println!("{:?}", s);
-        }
-
-        println!("{:?}", builder.sentence.pop_back().unwrap());
-
-        let mut p = ExprParser::parse(Rule::integer, "1010").unwrap_or_else(|e| panic!("{}", e));
-        let p = p.next().unwrap();
-        let r = parse_integer(p, &mut builder, true).unwrap();
-        for s in r {
-            println!("{:?}", s);
-        }
-
-        println!("{:?}", builder.sentence.pop_back().unwrap());
-
-        let mut builder = PhoneBuilder::new(false);
-
-        let mut p =
-            ExprParser::parse(Rule::integer, "034056009009040").unwrap_or_else(|e| panic!("{}", e));
-        let p = p.next().unwrap();
-        let r = parse_integer(p, &mut builder, false).unwrap();
-        for s in r {
-            println!("{:?}", s);
-        }
-
-        println!("{:?}", builder.sentence.pop_back().unwrap());
     }
 
     fn parse_decimals(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {

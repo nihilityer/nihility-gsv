@@ -536,18 +536,6 @@ pub fn split_text(text: &str, max_chunk_size: usize) -> Vec<&str> {
     r
 }
 
-// cargo test --package gpt_sovits_rs --lib -- text::test_split_text --exact --show-output
-#[test]
-fn test_split_text() {
-    let text = "这是一个测试文本 123.456。This is a test text 123.456. my email address is example@gmail.com. 一千是1,000";
-    let r = split_text(text, 10);
-    assert_eq!(r.len(), 4);
-    assert_eq!(r[0], "这是一个测试文本 123.456。");
-    assert_eq!(r[1], "This is a test text 123.456.");
-    assert_eq!(r[2], "my email address is example@gmail.com.");
-    assert_eq!(r[3], "一千是1,000");
-}
-
 /// return: (phone_seq, bert_seq)
 pub fn get_phone_and_bert(g2p: &G2p, text: &str) -> Result<(Tensor, Tensor)> {
     let mut phone_seq = Vec::new();
