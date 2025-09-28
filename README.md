@@ -18,7 +18,6 @@
 cuda11.8 (cxx11 ABI):		https://download.pytorch.org/libtorch/cu118/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Bcu118.zip
 cuda12.6 (cxx11 ABI):		https://download.pytorch.org/libtorch/cu126/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Bcu126.zip
 cuda12.8 (cxx11 ABI):		https://download.pytorch.org/libtorch/cu128/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Bcu128.zip
-ROCm6.3  (cxx11 ABI):		https://download.pytorch.org/libtorch/rocm6.3/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Brocm6.3.zip
 cpu 	 (cxx11 ABI):		https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Bcpu.zip
 ```
 
@@ -26,13 +25,9 @@ cpu 	 (cxx11 ABI):		https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi
 
 ```
 cuda 11.8(Release version):	https://download.pytorch.org/libtorch/cu118/libtorch-win-shared-with-deps-2.7.0%2Bcu118.zip
-cuda11.8 (Debug version):	https://download.pytorch.org/libtorch/cu118/libtorch-win-shared-with-deps-debug-2.7.0%2Bcu118.zip
 cuda12.6 (Release version):	https://download.pytorch.org/libtorch/cu126/libtorch-win-shared-with-deps-2.7.0%2Bcu126.zip
-cuda12.6(Debug version):	https://download.pytorch.org/libtorch/cu126/libtorch-win-shared-with-deps-debug-2.7.0%2Bcu126.zip
 cuda12.8 (Release version):	https://download.pytorch.org/libtorch/cu128/libtorch-win-shared-with-deps-2.7.0%2Bcu128.zip
-cuda12.8(Debug version):	https://download.pytorch.org/libtorch/cu128/libtorch-win-shared-with-deps-debug-2.7.0%2Bcu128.zip
 cpu (Release version):		https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.7.0%2Bcpu.zip
-cpu (Debug version):		https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-debug-2.7.0%2Bcpu.zip
 ```
 
 ## 模型下载
@@ -49,5 +44,6 @@ nihility-gsv -t '心有所向，日复一日，必有精进。'
 
 # TODO
 
+- [ ] 自动初始化（下载依赖+默认模型）
 - [ ] 推理api接口
 - [ ] 推理GUI
