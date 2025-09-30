@@ -15,7 +15,7 @@ enable_jp = ["jpreprocess"]
 
 [dependencies]
 tokenizers = { version = "0.22.0", default-features = false, features = ["onig"] }
-tch = { version = "0.20.0" }
+tch = { version = "0.21.0", git = "https://github.com/LaurentMazare/tch-rs.git" }
 wav_io = "0.1"
 jieba-rs = { version = "0.8", features = ["tfidf", "textrank"] }
 num2en = "1.0.0"

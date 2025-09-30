@@ -12,23 +12,9 @@
 
 根据具体使用的后端下载并解压，设置环境变量：`LIBTORCH`指向解压后的地址（模型暂时基于cpu后端导出）
 
-### linux版本地址
+[linux版本地址](https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-2.8.0%2Bcpu.zip)
 
-```
-cuda11.8 (cxx11 ABI):		https://download.pytorch.org/libtorch/cu118/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Bcu118.zip
-cuda12.6 (cxx11 ABI):		https://download.pytorch.org/libtorch/cu126/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Bcu126.zip
-cuda12.8 (cxx11 ABI):		https://download.pytorch.org/libtorch/cu128/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Bcu128.zip
-cpu 	 (cxx11 ABI):		https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Bcpu.zip
-```
-
-### win版本地址
-
-```
-cuda 11.8(Release version):	https://download.pytorch.org/libtorch/cu118/libtorch-win-shared-with-deps-2.7.0%2Bcu118.zip
-cuda12.6 (Release version):	https://download.pytorch.org/libtorch/cu126/libtorch-win-shared-with-deps-2.7.0%2Bcu126.zip
-cuda12.8 (Release version):	https://download.pytorch.org/libtorch/cu128/libtorch-win-shared-with-deps-2.7.0%2Bcu128.zip
-cpu (Release version):		https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.7.0%2Bcpu.zip
-```
+[win版本地址](https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.8.0%2Bcpu.zip)
 
 ## 模型下载
 

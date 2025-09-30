@@ -4,4 +4,5 @@ rustflags = [
     "-C", "link-arg=-Wl,-O1",
     "-C", "link-arg=-Wl,--as-needed",
     "-C", "link-arg=-Wl,--strip-all",
+    "-C", "link-arg=-Wl,-rpath,$ORIGIN/lib",
 ]
