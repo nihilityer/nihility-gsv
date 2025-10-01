@@ -21,3 +21,5 @@ ref
 lib
 output
 Cargo.lock
+.tmp
+/common/
