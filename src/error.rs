@@ -10,14 +10,6 @@ pub enum NihilityGsvError {
     Tokenizer(#[from] tokenizers::Error),
     #[error(transparent)]
     Pest(#[from] pest::error::Error<Rule>),
-    #[error(transparent)]
-    Io(#[from] std::io::Error),
-    #[error(transparent)]
-    Network(#[from] ureq::Error),
-    #[error(transparent)]
-    Zip(#[from] zip::result::ZipError),
-    #[error("Init Failed: {0}")]
-    Init(String),
     #[error("Feature Extraction Error: {0}")]
     FeatureExtraction(String),
     #[error("Infer Error: {0}")]
