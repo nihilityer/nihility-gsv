@@ -10,6 +10,12 @@ pub enum NihilityGsvError {
     Tokenizer(#[from] tokenizers::Error),
     #[error(transparent)]
     Pest(#[from] pest::error::Error<Rule>),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+    #[error(transparent)]
+    WavRead(#[from] wav_io::reader::DecodeError),
+    #[error(transparent)]
+    WavWrite(#[from] wav_io::writer::EncoderError),
     #[error("Feature Extraction Error: {0}")]
     FeatureExtraction(String),
     #[error("Infer Error: {0}")]
