@@ -146,6 +146,7 @@ impl NihilityGsv {
     pub fn infer(&self, text: &str) -> Result<Vec<f32>> {
         info!("infer text: {}", text);
         let st = std::time::Instant::now();
+        let _g = tch::no_grad_guard();
         let (text_seq, text_bert) = text::get_phone_and_bert(&self.g2p, text)?;
         let audio = self.gsv.infer(&text_seq, &text_bert, 15)?;
         info!("infer done, cost: {:?}", st.elapsed());
