@@ -69,15 +69,14 @@ pub mod zh {
         pair: Pair<Rule>,
         builder: &mut PhoneBuilder,
         unit: bool,
-    ) -> Result<LinkedList<(&'static str, &'static str)>> {
+    ) -> Result<LinkedList<(String, String)>> {
         assert_eq!(pair.as_rule(), Rule::integer);
 
-        let mut r: LinkedList<(&str, &str)> = LinkedList::new();
+        let mut r: LinkedList<(String, String)> = LinkedList::new();
 
         let inner = pair.into_inner().rev();
-        let mut n = 0;
 
-        for pair in inner {
+        for (n, pair) in inner.enumerate() {
             let txt = match pair.as_str() {
                 "0" => "零",
                 "1" => "一",
@@ -102,11 +101,10 @@ pub mod zh {
                 BASE_UNITS[(n / 4) % 4]
             };
 
-            r.push_front((txt, u));
-            n += 1;
+            r.push_front((txt.to_string(), u.to_string()));
         }
 
-        if r.iter().all(|(s, _)| s == &"零") {
+        if r.iter().all(|(s, _)| s == "零") {
             builder.push_zh_word("零");
             return Ok(r);
         }
@@ -114,8 +112,8 @@ pub mod zh {
         if unit {
             let mut last_is_zero = true;
             for (s, u) in &r {
-                if s == &"零" {
-                    if !BASE_UNITS.contains(u) {
+                if s == "零" {
+                    if !BASE_UNITS.contains(&u.as_str()) {
                         if !last_is_zero {
                             builder.push_zh_word(s);
                             last_is_zero = true;
@@ -402,14 +400,12 @@ pub mod en {
 
     fn parse_integer(pair: Pair<Rule>, builder: &mut PhoneBuilder, unit: bool) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::integer);
-        if unit {
-            if let Ok(r) = num2en::str_to_words(pair.as_str()) {
-                r.split(&[' ', '-']).for_each(|s| {
-                    builder.push_en_word(s);
-                    builder.push_punctuation(SEPARATOR);
-                });
-                return Ok(());
-            }
+        if unit && let Ok(r) = num2en::str_to_words(pair.as_str()) {
+            r.split(&[' ', '-']).for_each(|s| {
+                builder.push_en_word(s);
+                builder.push_punctuation(SEPARATOR);
+            });
+            return Ok(());
         }
 
         let inner = pair.into_inner();
@@ -528,7 +524,7 @@ pub mod en {
     fn parse_link(pair: Pair<Rule>, builder: &mut PhoneBuilder) -> Result<()> {
         assert_eq!(pair.as_rule(), Rule::link);
 
-        builder.push_punctuation(super::super::SEPARATOR);
+        builder.push_punctuation(SEPARATOR);
 
         Ok(())
     }

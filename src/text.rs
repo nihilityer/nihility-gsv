@@ -53,7 +53,7 @@ impl G2PConfig {
                 let tokenizer = Tokenizer::from_str(g2pw::G2PW_TOKENIZER)?;
                 let tokenizer = Arc::new(tokenizer);
 
-                let mut bert = tch::CModule::load_on_device(&cn_bert_path, device)?;
+                let mut bert = tch::CModule::load_on_device(cn_bert_path, device)?;
                 bert.set_eval();
 
                 let cn_bert_model = CNBertModel::new(Arc::new(bert), tokenizer.clone());
@@ -119,7 +119,7 @@ impl G2p {
 #[inline]
 fn get_phone_symbol(symbols: &HashMap<String, i64>, ph: &str) -> i64 {
     // symbols[','] : 3
-    symbols.get(ph).map(|id| *id).unwrap_or(3)
+    symbols.get(ph).copied().unwrap_or(3)
 }
 
 fn split_zh_ph(ph: &str) -> (&str, &str) {
@@ -449,7 +449,7 @@ fn split_zh_ph(ph: &str) -> (&str, &str) {
 fn split_zh_ph_(ph: &str) -> (&str, &str) {
     if ph.starts_with("zh") || ph.starts_with("ch") || ph.starts_with("sh") {
         ph.split_at(2)
-    } else if ph.starts_with(&[
+    } else if ph.starts_with([
         'b', 'p', 'm', 'f', 'd', 't', 'n', 'l', 'g', 'k', 'h', 'j', 'q', 'x', 'r', 'z', 'c', 's',
         'y', 'w',
     ]) {
@@ -479,7 +479,7 @@ pub fn split_text(text: &str, max_chunk_size: usize) -> Vec<&str> {
     let mut total_count = 0;
     let mut splite_index = 0;
 
-    for s in text.split_inclusive(|c| is_punctution(c)) {
+    for s in text.split_inclusive(is_punctution) {
         let count = if is_en {
             s.split(" ").count()
         } else {
@@ -679,7 +679,7 @@ impl CNBertModel {
         let encoding = tokenizer.encode(text, true).unwrap();
         let ids = encoding
             .get_ids()
-            .into_iter()
+            .iter()
             .map(|x| (*x) as i32)
             .collect::<Vec<i32>>();
         let text_ids = Tensor::from_slice(&ids);
@@ -687,7 +687,7 @@ impl CNBertModel {
 
         let mask = encoding
             .get_attention_mask()
-            .into_iter()
+            .iter()
             .map(|x| (*x) as i32)
             .collect::<Vec<i32>>();
         let text_mask = Tensor::from_slice(&mask);
@@ -695,7 +695,7 @@ impl CNBertModel {
 
         let token_type_ids = encoding
             .get_type_ids()
-            .into_iter()
+            .iter()
             .map(|x| (*x) as i32)
             .collect::<Vec<i32>>();
         let text_token_type_ids = Tensor::from_slice(&token_type_ids);
@@ -712,7 +712,7 @@ impl CNBertModel {
         let bert = match self {
             CNBertModel::None => {
                 let len: i32 = word2ph.iter().sum();
-                Tensor::zeros(&[len as i64, 1024], (Kind::Float, device))
+                Tensor::zeros([len as i64, 1024], (Kind::Float, device))
             }
             CNBertModel::TchBert(bert, tokenizer) => {
                 let (text_ids, text_mask, text_token_type_ids) =
@@ -771,7 +771,7 @@ impl ZhSentence {
         for p in &self.phones {
             match p {
                 g2pw::G2PWOut::Pinyin(p) => {
-                    let (s, y) = split_zh_ph(&p);
+                    let (s, y) = split_zh_ph(p);
                     self.phones_ids.push(get_phone_symbol(&g2p.symbols, s));
                     self.phones_ids.push(get_phone_symbol(&g2p.symbols, y));
                     self.word2ph.push(2);
@@ -836,7 +836,7 @@ impl EnSentence {
                         }
                     } else if let (false, Ok(v)) = (
                         word.chars().all(char::is_uppercase),
-                        g2p.g2p_en.get_phoneme(&word),
+                        g2p.g2p_en.get_phoneme(word),
                     ) {
                         for ph in v.split_ascii_whitespace() {
                             self.phones.push(Cow::Owned(ph.to_string()));
@@ -847,7 +847,7 @@ impl EnSentence {
                             let mut b = [0; 4];
                             let c = c.encode_utf8(&mut b);
 
-                            if let Ok(v) = g2p.g2p_en.get_phoneme(&c) {
+                            if let Ok(v) = g2p.g2p_en.get_phoneme(c) {
                                 for ph in v.split_ascii_whitespace() {
                                     self.phones.push(Cow::Owned(ph.to_string()));
                                     self.phones_ids.push(get_phone_symbol(symbols, ph));
@@ -874,7 +874,7 @@ impl EnSentence {
             .to_device(g2p.device)
             .unsqueeze(0);
         let bert = Tensor::zeros(
-            &[self.phones_ids.len() as i64, 1024],
+            [self.phones_ids.len() as i64, 1024],
             (Kind::Float, g2p.device),
         );
 
@@ -936,7 +936,7 @@ impl NumSentence {
         //     Lang::En => text::num_to_en_text(symbols, &self.num_text, last_char_is_punctuation),
         // }
         let mut builder = PhoneBuilder::new(false);
-        let pairs = num::ExprParser::parse(num::Rule::all, &self.num_text)?;
+        let pairs = num::ExprParser::parse(num::Rule::all, &self.num_text).map_err(Box::new)?;
         for pair in pairs {
             match self.lang {
                 Lang::Zh => num::zh::parse_all(pair, &mut builder)?,
@@ -995,8 +995,8 @@ fn parse_punctuation(p: &str) -> Option<&'static str> {
 
 fn is_numeric(p: &str) -> bool {
     p.chars().any(|c| c.is_numeric())
-        || p.contains(&NUM_OP)
-        || p.to_lowercase().contains(&[
+        || p.contains(NUM_OP)
+        || p.to_lowercase().contains([
             'α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ', 'ι', 'κ', 'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ',
             'σ', 'ς', 'τ', 'υ', 'φ', 'χ', 'ψ', 'ω',
         ])
@@ -1063,8 +1063,9 @@ impl PhoneBuilder {
                             _ => false,
                         })
                         .unwrap_or(false)
+                    && let Some(w) = en.en_text.last_mut()
                 {
-                    en.en_text.last_mut().map(|w| *w = EnWord::A);
+                    *w = EnWord::A
                 }
                 if p == " "
                     && en
@@ -1103,24 +1104,22 @@ impl PhoneBuilder {
                     .unwrap_or(false)
                 {
                     let p = en.en_text.pop().unwrap();
-                    en.en_text.last_mut().map(|w| {
-                        if let EnWord::Word(w) = w {
-                            if let EnWord::Punctuation(p) = p {
-                                w.push_str(p);
-                            }
-                            w.push_str(&word);
+                    if let Some(EnWord::Word(w)) = en.en_text.last_mut() {
+                        if let EnWord::Punctuation(p) = p {
+                            w.push_str(p);
                         }
-                    });
+                        w.push_str(&word);
+                    }
                 } else {
                     en.en_text.push(EnWord::Word(word));
                 }
             }
             Some(Sentence::Num(n)) if n.need_drop() => {
                 let pop = self.sentence.pop_back().unwrap();
-                if let Sentence::Num(n) = pop {
-                    if n.is_link_symbol() {
-                        self.push_punctuation("-");
-                    }
+                if let Sentence::Num(n) = pop
+                    && n.is_link_symbol()
+                {
+                    self.push_punctuation("-");
                 }
                 self.push_en_word(&word)
             }

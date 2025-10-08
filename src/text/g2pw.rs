@@ -118,7 +118,7 @@ impl G2PWConverter {
 
     pub fn simple_get_pinyin(&self, text: &str) -> Vec<G2PWOut> {
         let mut pre_data = vec![];
-        for (_, c) in text.chars().enumerate() {
+        for c in text.chars() {
             if let Some(mono) = DICT_MONO_CHARS.get(&c) {
                 pre_data.push(G2PWOut::Pinyin(&mono.phone));
             } else if let Some(poly) = DICT_POLY_CHARS.get(&c) {

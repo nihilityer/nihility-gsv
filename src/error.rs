@@ -9,7 +9,7 @@ pub enum NihilityGsvError {
     #[error(transparent)]
     Tokenizer(#[from] tokenizers::Error),
     #[error(transparent)]
-    Pest(#[from] pest::error::Error<Rule>),
+    Pest(#[from] Box<pest::error::Error<Rule>>),
     #[error(transparent)]
     Io(#[from] std::io::Error),
     #[error(transparent)]
