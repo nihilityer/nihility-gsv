@@ -1,0 +1,93 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version - in the form of v1.2.3'
+        required: true
+        type: string
+
+env:
+  LIBTORCH_VERSION: "2.8.0+cpu"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          # Linux targets
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            ext: ""
+            libtorch_url: "https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-${{ env.LIBTORCH_VERSION }}.zip"
+
+          # Windows targets
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            ext: ".exe"
+            libtorch_url: "https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-${{ env.LIBTORCH_VERSION }}.zip"
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Echo info
+        run: echo ${{ inputs.version || github.ref_name }}
+
+      - name: Download and Extract libtorch (Linux/Windows)
+        if: matrix.libtorch_url != ''
+        shell: bash
+        run: |
+          echo "Downloading libtorch from ${{ matrix.libtorch_url }}"
+          curl -L "${{ matrix.libtorch_url }}" -o libtorch.zip
+          mkdir -p libtorch
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            # Use PowerShell's Expand-Archive on Windows for reliability
+            7z x libtorch.zip -olibtorch
+            # Find the extracted folder (it's usually just 'libtorch')
+            LIBTORCH_PATH="$(pwd)/libtorch/libtorch"
+          else
+            unzip -q libtorch.zip -d libtorch
+            LIBTORCH_PATH="$(pwd)/libtorch/libtorch"
+          fi
+          echo "LIBTORCH=${LIBTORCH_PATH}" >> "$GITHUB_ENV"
+          echo "PATH=${PATH}:${LIBTORCH_PATH}/lib" >> "$GITHUB_ENV"
+          echo "LIBTORCH set to ${LIBTORCH_PATH}"
+
+      - name: Set Target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Build release
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Prepare artifacts
+        run: |
+          mkdir release
+          cp "./target/${{ matrix.target }}/release/nihility-gsv${{ matrix.ext }}" "release/nihility-gsv-${{ inputs.version || github.ref_name }}-${{ matrix.target }}${{ matrix.ext }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nihilityer-gsv-${{ inputs.version || github.ref_name }}-${{ matrix.target }}
+          path: release/
+
+  release:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: nihilityer-gsv-${{ inputs.version || github.ref_name }}-*
+          merge-multiple: true
+          path: binaries
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.version || github.ref_name }}
+          files: binaries/*
