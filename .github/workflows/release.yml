@@ -91,3 +91,5 @@ jobs:
         with:
           tag_name: ${{ inputs.version || github.ref_name }}
           files: binaries/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
