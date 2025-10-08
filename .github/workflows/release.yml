@@ -31,6 +31,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: ${{ matrix.target }}
 
       - name: Echo info
         run: echo ${{ inputs.version || github.ref_name }}
@@ -54,9 +58,6 @@ jobs:
           echo "LIBTORCH=${LIBTORCH_PATH}" >> "$GITHUB_ENV"
           echo "PATH=${PATH}:${LIBTORCH_PATH}/lib" >> "$GITHUB_ENV"
           echo "LIBTORCH set to ${LIBTORCH_PATH}"
-
-      - name: Set Target
-        run: rustup target add ${{ matrix.target }}
 
       - name: Build release
         run: cargo build --release --target ${{ matrix.target }}
