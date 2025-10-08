@@ -11,9 +11,6 @@ on:
         required: true
         type: string
 
-env:
-  LIBTORCH_VERSION: "2.8.0+cpu"
-
 jobs:
   build:
     strategy:
@@ -23,13 +20,13 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             ext: ""
-            libtorch_url: "https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-${{ env.LIBTORCH_VERSION }}.zip"
+            libtorch_url: "https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-2.8.0%2Bcpu.zip"
 
           # Windows targets
           - target: x86_64-pc-windows-msvc
             os: windows-latest
             ext: ".exe"
-            libtorch_url: "https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-${{ env.LIBTORCH_VERSION }}.zip"
+            libtorch_url: "https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.8.0%2Bcpu.zip"
 
     runs-on: ${{ matrix.os }}
     steps:
