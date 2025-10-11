@@ -28,7 +28,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ======================
-# 配置区 - 请在此处修改为您自己的地址和文件名
+# 配置区
 # ======================
 # LibTorch 下载地址
 LIBTORCH_URL="https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-2.8.0%2Bcpu.zip"
