@@ -34,7 +34,7 @@ if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 :: ==============================
 :: 创建目录
 :: ==============================
-for %%d in ("lib" "base" "model\default") do (
+for %%d in ("base" "model\default") do (
     if not exist "%SCRIPT_DIR%\%%~d" mkdir "%SCRIPT_DIR%\%%~d"
 )
 

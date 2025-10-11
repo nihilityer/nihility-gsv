@@ -18,7 +18,8 @@ curl -fsSL https://raw.githubusercontent.com/nihilityer/nihility-gsv/refs/heads/
 
 ### windows系统
 
-马上就好
+1. 下载一键安装脚本到需要安装的目录（自动下载文件较多，请注意不要直接放在桌面）：[下载地址](https://raw.githubusercontent.com/nihilityer/nihility-gsv/refs/heads/main/install.bat)
+2. 双击执行
 
 ## 推理
 
@@ -31,6 +32,12 @@ curl -fsSL https://raw.githubusercontent.com/nihilityer/nihility-gsv/refs/heads/
 ```
 
 ### windows系统
+
+文件管理器中打开安装目录，在地址栏中输入`cmd`打开命令提示符，然后输入命令：
+
+```cmd
+nihility-gsv.exe 心有所向，日复一日，必有精进。
+```
 
 马上就好
 
