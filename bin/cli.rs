@@ -1,3 +1,5 @@
+use std::io;
+use std::io::Write;
 use clap::Parser;
 use nihility_gsv::{NihilityGsvConfig, tch};
 use time::format_description::well_known::Iso8601;
@@ -25,11 +27,23 @@ struct CliArgs {
     #[arg(short, long, default_value = "output")]
     output_dir: String,
     #[arg(short, long)]
-    text: String,
+    text: Option<String>,
 }
 
 fn main() {
     let args = CliArgs::parse();
+    let text = args.text.clone().unwrap_or_else(|| {
+        print!("Enter text: ");
+        io::stdout().flush().expect("failed to flush stdout");
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).expect("Failed to read line");
+        input
+    }).trim().to_string();
+    if text.is_empty() {
+        eprintln!("text: empty");
+        return;
+    }
+
     tracing_subscriber::registry()
         .with(
             fmt::layer()
@@ -42,7 +56,6 @@ fn main() {
         .init();
 
     let device = tch::Device::cuda_if_available();
-    let text = args.text.clone();
     let gsv = NihilityGsvConfig::from(args)
         .init(device)
         .expect("Failed to init gsv");
