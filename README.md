@@ -8,7 +8,7 @@
 
 # 使用方法
 
-## 使用自动脚本安装
+## 安装
 
 ### Linux系统
 
@@ -16,9 +16,23 @@
 curl -fsSL https://raw.githubusercontent.com/nihilityer/nihility-gsv/refs/heads/main/install.sh | bash
 ```
 
+### windows系统
+
+马上就好
+
+## 推理
+
+**注**：所有推理结果都在`output`目录下，根据当前使用的模型来创建目录，根据生成完成的时间来设置文件名（默认生成在：`output/default`）
+
+### Linux系统
+
 ```bash
 ./nihility-gsv -t '心有所向，日复一日，必有精进。'
 ```
+
+### windows系统
+
+马上就好
 
 # TODO
 
