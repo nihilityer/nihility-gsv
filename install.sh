@@ -86,7 +86,7 @@ apply_hf_mirror() {
 apply_gh_mirror() {
     local url="$1"
     if [ "$USE_GH_MIRROR" = true ]; then
-        echo "https://ghproxy.com/$url"
+        echo "${url/github.com/ghproxy.com}"
     else
         echo "$url"
     fi
