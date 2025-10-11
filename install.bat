@@ -5,8 +5,8 @@ setlocal
 :: 配置区
 :: ==============================
 set "REPO=nihilityer/nihility-gsv"
-set "VERSION=v0.0.1"
-set "WIN_ASSET_NAME=nihility-gsv-v0.0.1-x86_64-pc-windows-msvc.exe"
+set "VERSION=v0.1.0"
+set "WIN_ASSET_NAME=nihility-gsv-v0.1.0-x86_64-pc-windows-msvc.exe"
 set "FINAL_EXE_NAME=nihility-gsv.exe"
 
 :: ==============================

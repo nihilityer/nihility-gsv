@@ -42,8 +42,8 @@ MODEL_DEFAULT_FILES=("default/model.pt" "default/ref.txt" "default/ref.wav")
 
 # GitHub 仓库和要下载的应用资产名
 GITHUB_APP_REPO="nihilityer/nihility-gsv"
-GITHUB_APP_VERSION="v0.0.1"
-GITHUB_APP_ASSET_NAME="nihility-gsv-v0.0.1-x86_64-unknown-linux-gnu"
+GITHUB_APP_VERSION="v0.1.0"
+GITHUB_APP_ASSET_NAME="nihility-gsv-v0.1.0-x86_64-unknown-linux-gnu"
 FINAL_APP_NAME="nihility-gsv"
 
 # ======================
