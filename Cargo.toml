@@ -13,6 +13,10 @@ path = "bin/cli.rs"
 name = "nihility-gsv-api"
 path = "bin/api.rs"
 
+[[bin]]
+name = "nihility-gsv-rpc"
+path = "bin/rpc.rs"
+
 [features]
 default = []
 enable_jp = ["jpreprocess"]
@@ -35,10 +39,12 @@ serde = { version = "1.0", features = ["derive"] }
 lazy_static = { version = "1.5" }
 chrono = { version = "0.4", features = ["clock"] }
 actix-web = { version = "4.11" }
-tokio = { version = "1.47" }
+tokio = { version = "1.47", features = ["rt-multi-thread", "macros"] }
 
 nihility-config = { version = "0.1.2" }
 nihility-log = { version = "0.1.1" }
+nihility-rpc = { version = "0.1.1" }
+tonic = { version = "0.14", default-features = false, features = ["codegen", "router", "server", "channel"] }
 
 [profile.release]
 opt-level = "z"

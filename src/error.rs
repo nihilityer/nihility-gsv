@@ -1,5 +1,3 @@
-use crate::text::num::{Rule};
-
 pub type Result<T> = core::result::Result<T, NihilityGsvError>;
 
 #[derive(thiserror::Error, Debug)]
@@ -9,7 +7,7 @@ pub enum NihilityGsvError {
     #[error(transparent)]
     Tokenizer(#[from] tokenizers::Error),
     #[error(transparent)]
-    Pest(#[from] Box<pest::error::Error<Rule>>),
+    Pest(#[from] Box<pest::error::Error<crate::text::num::Rule>>),
     #[error(transparent)]
     Io(#[from] std::io::Error),
     #[error(transparent)]
@@ -22,6 +20,4 @@ pub enum NihilityGsvError {
     Infer(String),
 }
 
-impl actix_web::error::ResponseError for NihilityGsvError {
-    
-}
+impl actix_web::error::ResponseError for NihilityGsvError {}
