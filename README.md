@@ -65,6 +65,20 @@ nihility-gsv-cli.exe -t 心有所向，日复一日，必有精进。
 
 Api服务器相关配置文件默认为：`config/nihility-gsv-api.toml`，支持Json格式配置。
 
+# 导出新的模型
+
+在`GPT-SoVITS`中训练好对应模型，使用官方导出脚本导出：
+
+```bash
+python GPT_SoVITS/export_torch_script.py --gpt_model GPT_weights_v2ProPlus/xxx-e15.ckpt --sovits_model SoVITS_weights_v2ProPlus/xxx_e8_s248.pth --ref_audio ref/ref.wav --ref_text xxx --output_path export --device cpu --version v2ProPlus --no-half
+```
+
+1. 将导出的`gpt_sovits_model.pt`重命名为`model.pt`；
+2. 将导出时使用的参考音频重命名为`ref.wav`；
+3. 导出时使用的参考音频对应文本保存到`ref.txt`文件中；
+4. 将以上三个文件放在`model`目录下一个新目录中，目录名称随意；
+5. 修改配置文件`config/nihility-gsv.toml`中`selected_model`的值为新创建的目录名称。
+
 # TODO
 
 - [x] API调用
