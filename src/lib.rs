@@ -8,11 +8,10 @@ use crate::error::*;
 use crate::gsv::Gsv;
 use crate::ssl::SSL;
 use crate::text::{G2PConfig, G2p};
-use chrono::Local;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 pub use tch;
 use tch::Device;
 use tracing::{error, info};
@@ -30,7 +29,6 @@ pub struct NihilityGsvConfig {
     pub ssl_model: String,
     pub gsv_dir: String,
     pub selected_model: String,
-    pub output_dir: String,
 }
 
 #[derive(Clone)]
@@ -38,7 +36,6 @@ pub struct NihilityGsv {
     g2p: G2p,
     gsv: Gsv,
     wav_header: WavHeader,
-    output_path: PathBuf,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -66,16 +63,6 @@ impl NihilityGsvConfig {
             error!("GSV model dir does not exist");
             return Err(NihilityGsvError::Infer(
                 "GSV model dir does not exist".into(),
-            ));
-        }
-        let output_path = Path::new(&self.output_dir).join(&self.selected_model);
-        if !output_path.exists() {
-            info!("Creating GSV output dir {:?}", output_path);
-            fs::create_dir_all(&output_path)?;
-        } else if !output_path.is_dir() {
-            error!("Output path is not a directory");
-            return Err(NihilityGsvError::Infer(
-                "Output path is not a directory".into(),
             ));
         }
 
@@ -145,7 +132,6 @@ impl NihilityGsvConfig {
             g2p,
             gsv,
             wav_header,
-            output_path,
         })
     }
 }
@@ -162,16 +148,6 @@ impl NihilityGsv {
         let mut samples = vec![0f32; audio_size];
         audio.f_copy_data(&mut samples, audio_size)?;
         Ok(samples)
-    }
-
-    pub fn infer_out_to_local(&self, param: NihilityGsvInferParam) -> Result<()> {
-        let samples = self.infer(param)?;
-        let out_wav_name = Local::now().format("%Y-%m-%d-%H-%M-%S").to_string();
-        let output = self.output_path.join(format!("{}.wav", out_wav_name));
-        let mut file_out = fs::File::create(&output)?;
-        wav_io::write_to_file(&mut file_out, &self.wav_header, &samples)?;
-        info!("write output audio wav to {}", output.display());
-        Ok(())
     }
 
     pub fn infer_out_to_wav(&self, param: NihilityGsvInferParam) -> Result<Vec<u8>> {
@@ -191,7 +167,6 @@ impl Default for NihilityGsvConfig {
             ssl_model: "base/ssl.pt".to_string(),
             gsv_dir: "model".to_string(),
             selected_model: "default".to_string(),
-            output_dir: "output".to_string(),
         }
     }
 }

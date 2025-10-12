@@ -1,25 +1,16 @@
+use chrono::Local;
 use clap::Parser;
 use nihility_gsv::{NihilityGsvConfig, NihilityGsvInferParam, tch};
-use std::io;
 use std::io::Write;
+use std::path::Path;
+use std::{fs, io};
+use tracing::{error, info};
 
 #[derive(Parser, Debug, Clone)]
 #[command(version, about, long_about = None)]
 struct CliArgs {
-    #[arg(long, default_value = "base/g2p-en.pt")]
-    g2p_en_model: String,
-    #[arg(long, default_value = "base/g2p-zh.pt")]
-    g2p_zh_model: String,
-    #[arg(long, default_value = "base/bert.pt")]
-    bert_model: String,
-    #[arg(long, default_value = "base/ssl.pt")]
-    ssl_model: String,
-    #[arg(long, default_value = "model")]
-    gsv_dir: String,
     #[arg(long, default_value = "15")]
     top_k: i64,
-    #[arg(short, long, default_value = "default")]
-    selected_model: String,
     #[arg(short, long, default_value = "output")]
     output_dir: String,
     #[arg(short, long)]
@@ -49,26 +40,30 @@ fn main() {
         return;
     }
 
+    let output_path = Path::new(&args.output_dir);
+    if !output_path.exists() {
+        info!("Creating GSV output dir {:?}", output_path);
+        fs::create_dir_all(output_path).expect("Could not create output directory");
+    } else if !output_path.is_dir() {
+        error!("Output path is not a directory");
+        return;
+    }
+
     let device = tch::Device::cuda_if_available();
-    let gsv = NihilityGsvConfig::from(args.clone())
+    let gsv = nihility_config::get_config::<NihilityGsvConfig>(env!("CARGO_PKG_NAME").to_string())
+        .expect("could not get inner config")
         .init(device)
         .expect("Failed to init gsv");
-    gsv.infer_out_to_local(NihilityGsvInferParam::from(args))
+    let out_wav_name = Local::now().format("%Y-%m-%d-%H-%M-%S").to_string();
+    let output = output_path.join(format!("{}.wav", out_wav_name));
+    let mut file_out = fs::File::create(&output).expect("Could not create output file");
+    let audio_wav_data = gsv
+        .infer_out_to_wav(NihilityGsvInferParam::from(args))
         .expect("Failed to infer gsv");
-}
-
-impl From<CliArgs> for NihilityGsvConfig {
-    fn from(value: CliArgs) -> Self {
-        NihilityGsvConfig {
-            g2p_en_model: value.g2p_en_model,
-            g2p_zh_model: value.g2p_zh_model,
-            bert_model: value.bert_model,
-            ssl_model: value.ssl_model,
-            gsv_dir: value.gsv_dir,
-            selected_model: value.selected_model,
-            output_dir: value.output_dir,
-        }
-    }
+    file_out
+        .write_all(&audio_wav_data)
+        .expect("Failed to write audio output to file");
+    info!("write output audio wav to {}", output.display());
 }
 
 impl From<CliArgs> for NihilityGsvInferParam {
