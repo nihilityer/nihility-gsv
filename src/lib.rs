@@ -33,11 +33,19 @@ pub struct NihilityGsvConfig {
     pub output_dir: String,
 }
 
+#[derive(Clone)]
 pub struct NihilityGsv {
     g2p: G2p,
     gsv: Gsv,
     wav_header: WavHeader,
     output_path: PathBuf,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct NihilityGsvInferParam {
+    pub text: String,
+    pub top_k: i64,
 }
 
 impl NihilityGsvConfig {
@@ -143,12 +151,12 @@ impl NihilityGsvConfig {
 }
 
 impl NihilityGsv {
-    pub fn infer(&self, text: &str) -> Result<Vec<f32>> {
-        info!("infer text: {}", text);
+    pub fn infer(&self, param: NihilityGsvInferParam) -> Result<Vec<f32>> {
+        info!("infer text: {}", param.text);
         let st = std::time::Instant::now();
         let _g = tch::no_grad_guard();
-        let (text_seq, text_bert) = text::get_phone_and_bert(&self.g2p, text)?;
-        let audio = self.gsv.infer(&text_seq, &text_bert, 15)?;
+        let (text_seq, text_bert) = text::get_phone_and_bert(&self.g2p, &param.text)?;
+        let audio = self.gsv.infer(&text_seq, &text_bert, param.top_k)?;
         info!("infer done, cost: {:?}", st.elapsed());
         let audio_size = audio.size1().expect("Failed to get audio size") as usize;
         let mut samples = vec![0f32; audio_size];
@@ -156,14 +164,21 @@ impl NihilityGsv {
         Ok(samples)
     }
 
-    pub fn infer_out_to_local(&self, text: &str) -> Result<()> {
-        let samples = self.infer(text)?;
+    pub fn infer_out_to_local(&self, param: NihilityGsvInferParam) -> Result<()> {
+        let samples = self.infer(param)?;
         let out_wav_name = Local::now().format("%Y-%m-%d-%H-%M-%S").to_string();
         let output = self.output_path.join(format!("{}.wav", out_wav_name));
         let mut file_out = fs::File::create(&output)?;
         wav_io::write_to_file(&mut file_out, &self.wav_header, &samples)?;
         info!("write output audio wav to {}", output.display());
         Ok(())
+    }
+
+    pub fn infer_out_to_wav(&self, param: NihilityGsvInferParam) -> Result<Vec<u8>> {
+        Ok(wav_io::write_to_bytes(
+            &self.wav_header,
+            &self.infer(param)?,
+        )?)
     }
 }
 
@@ -177,6 +192,15 @@ impl Default for NihilityGsvConfig {
             gsv_dir: "model".to_string(),
             selected_model: "default".to_string(),
             output_dir: "output".to_string(),
+        }
+    }
+}
+
+impl Default for NihilityGsvInferParam {
+    fn default() -> Self {
+        NihilityGsvInferParam {
+            text: "".to_string(),
+            top_k: 15,
         }
     }
 }

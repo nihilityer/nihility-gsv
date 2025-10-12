@@ -79,6 +79,7 @@ impl G2PConfig {
     }
 }
 
+#[derive(Clone)]
 pub struct G2p {
     zh_bert: CNBertModel,
     g2pw: g2pw::G2PWConverter,

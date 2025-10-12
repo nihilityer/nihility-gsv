@@ -6,8 +6,12 @@ description = "A GPT_Sovits inference lib in Rust base on libtorch"
 license = "MIT"
 
 [[bin]]
-name = "nihility-gsv"
+name = "nihility-gsv-cli"
 path = "bin/cli.rs"
+
+[[bin]]
+name = "nihility-gsv-api"
+path = "bin/api.rs"
 
 [features]
 default = []
@@ -25,13 +29,16 @@ serde_json = "1.0"
 jpreprocess = { version = "0.12", default-features = false, features = ["naist-jdic"], optional = true }
 
 clap = { version = "4.5", features = ["derive"] }
-time = { version = "0.3", default-features = false, features = ["parsing"] }
 tracing = { version = "0.1" }
-tracing-subscriber = { version = "0.3", features = ["local-time", "ansi", "fmt", "std"] }
 thiserror = { version = "2.0", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 lazy_static = { version = "1.5" }
 chrono = { version = "0.4", features = ["clock"] }
+actix-web = { version = "4.11" }
+tokio = { version = "1.47" }
+
+nihility-config = { version = "0.1.2" }
+nihility-log = { version = "0.1.1" }
 
 [profile.release]
 opt-level = "z"

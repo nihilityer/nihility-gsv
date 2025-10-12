@@ -16,6 +16,7 @@ static EOS_TOKEN: &str = "</s>";
 static BOS_TOKEN_ID: u32 = 0;
 static EOS_TOKEN_ID: u32 = 2;
 
+#[derive(Clone)]
 pub struct G2PEnConverter {
     model: Arc<tch::CModule>,
     tokenizer: Arc<tokenizers::Tokenizer>,

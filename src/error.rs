@@ -21,3 +21,7 @@ pub enum NihilityGsvError {
     #[error("Infer Error: {0}")]
     Infer(String),
 }
+
+impl actix_web::error::ResponseError for NihilityGsvError {
+    
+}

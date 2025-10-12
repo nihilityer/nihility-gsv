@@ -22,3 +22,5 @@ base
 lib
 output
 Cargo.lock
+config
+log
