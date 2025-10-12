@@ -1,18 +1,19 @@
 @echo off
+chcp 65001
 setlocal
 
 :: ==============================
-:: é…ç½®åŒº
+:: ÅäÖÃÇø
 :: ==============================
 set "REPO=nihilityer/nihility-gsv"
 set "VERSION=v0.2.1"
-set "CLI_WIN_ASSET_NAME=nihility-gsv-cli-v0.2.1-x86_64-pc-windows-msvc.exe"
+set "CLI_WIN_ASSET_NAME=nihility-gsv-cli-%VERSION%-x86_64-pc-windows-msvc.exe"
 set "CLI_FINAL_EXE_NAME=nihility-gsv-cli.exe"
-set "API_WIN_ASSET_NAME=nihility-gsv-api-v0.2.1-x86_64-pc-windows-msvc.exe"
+set "API_WIN_ASSET_NAME=nihility-gsv-api-%VERSION%-x86_64-pc-windows-msvc.exe"
 set "API_FINAL_EXE_NAME=nihility-gsv-api.exe"
 
 :: ==============================
-:: å‚æ•°è§£æž
+:: ²ÎÊý½âÎö
 :: ==============================
 set "USE_HF_MIRROR=0"
 set "USE_GH_MIRROR=0"
@@ -28,20 +29,20 @@ goto arg_loop
 :args_done
 
 :: ==============================
-:: èŽ·å–è„šæœ¬ç›®å½•
+:: »ñÈ¡½Å±¾Ä¿Â¼
 :: ==============================
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 :: ==============================
-:: åˆ›å»ºç›®å½•
+:: ´´½¨Ä¿Â¼
 :: ==============================
 for %%d in ("base" "model\default") do (
     if not exist "%SCRIPT_DIR%\%%~d" mkdir "%SCRIPT_DIR%\%%~d"
 )
 
 :: ==============================
-:: ä¸‹è½½å‡½æ•°
+:: ÏÂÔØº¯Êý
 :: ==============================
 goto :main
 
@@ -49,39 +50,39 @@ goto :main
 set "URL=%~1"
 set "OUT=%~2"
 if "%URL%"=="" (
-    echo [é”™è¯¯] URL ä¸ºç©º
+    echo [´íÎó] URL Îª¿Õ
     exit /b 1
 )
 if "%OUT%"=="" (
-    echo [é”™è¯¯] è¾“å‡ºè·¯å¾„ä¸ºç©º
+    echo [´íÎó] Êä³öÂ·¾¶Îª¿Õ
     exit /b 1
 )
 if exist "%OUT%" (
-    echo [è·³è¿‡] æ–‡ä»¶å·²å­˜åœ¨: %OUT%
+    echo [Ìø¹ý] ÎÄ¼þÒÑ´æÔÚ: %OUT%
     exit /b 0
 )
-echo [ä¸‹è½½] %URL%
+echo [ÏÂÔØ] %URL%
 curl -fL -o "%OUT%" "%URL%" 2>nul
 if %errorlevel% equ 0 exit /b 0
-echo [å›žé€€] curl å¤±è´¥ï¼Œå°è¯• PowerShell...
+echo [»ØÍË] curl Ê§°Ü£¬³¢ÊÔ PowerShell...
 powershell -ExecutionPolicy Bypass -Command "try { (New-Object System.Net.WebClient).DownloadFile('%URL%', '%OUT%') } catch { Write-Error $_; exit 1 }"
 if %errorlevel% neq 0 (
-    echo [é”™è¯¯] ä¸‹è½½å¤±è´¥: %URL%
+    echo [´íÎó] ÏÂÔØÊ§°Ü: %URL%
     exit /b 1
 )
 exit /b 0
 
 :: ==============================
-:: ä¸»æµç¨‹
+:: Ö÷Á÷³Ì
 :: ==============================
 :main
 echo ========================================
-echo   nihility-gsv Windows å®‰è£…ç¨‹åº
+echo   nihility-gsv Windows °²×°³ÌÐò
 echo ========================================
 echo.
 
-:: æ­¥éª¤ 1: LibTorch
-echo [æ­¥éª¤ 1/3] ä¸‹è½½å¹¶å¤„ç† LibTorch...
+:: ²½Öè 1: LibTorch
+echo [²½Öè 1/3] ÏÂÔØ²¢´¦Àí LibTorch...
 set "LIBTORCH_ZIP=%SCRIPT_DIR%\libtorch.zip"
 call :download_file "https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.8.0%%%%2Bcpu.zip" "%LIBTORCH_ZIP%"
 if errorlevel 1 exit /b 1
@@ -89,36 +90,36 @@ if errorlevel 1 exit /b 1
 set "TEMP_DIR=%TEMP%\libtorch_extract_%RANDOM%"
 mkdir "%TEMP_DIR%" 2>nul
 if errorlevel 1 (
-    echo [é”™è¯¯] æ— æ³•åˆ›å»ºä¸´æ—¶ç›®å½•
+    echo [´íÎó] ÎÞ·¨´´½¨ÁÙÊ±Ä¿Â¼
     exit /b 1
 )
 
-:: è§£åŽ‹
+:: ½âÑ¹
 if exist "%SystemRoot%\system32\tar.exe" (
     tar -xf "%LIBTORCH_ZIP%" -C "%TEMP_DIR%" >nul
 ) else (
     powershell -ExecutionPolicy Bypass -Command "Expand-Archive -Path '%LIBTORCH_ZIP%' -DestinationPath '%TEMP_DIR%' -Force"
 )
 if errorlevel 1 (
-    echo [é”™è¯¯] è§£åŽ‹å¤±è´¥
+    echo [´íÎó] ½âÑ¹Ê§°Ü
     rmdir /s /q "%TEMP_DIR%" 2>nul
     exit /b 1
 )
 
 xcopy /s /e /q "%TEMP_DIR%\libtorch\lib\*" "%SCRIPT_DIR%\" >nul
 if errorlevel 1 (
-    echo [é”™è¯¯] å¤åˆ¶ lib æ–‡ä»¶å¤±è´¥
+    echo [´íÎó] ¸´ÖÆ lib ÎÄ¼þÊ§°Ü
     rmdir /s /q "%TEMP_DIR%" 2>nul
     exit /b 1
 )
 
 del /f "%LIBTORCH_ZIP%" 2>nul
 rmdir /s /q "%TEMP_DIR%" 2>nul
-echo [å®Œæˆ] LibTorch å·²å®‰è£…
+echo [Íê³É] LibTorch ÒÑ°²×°
 echo.
 
-:: æ­¥éª¤ 2: æ¨¡åž‹æ–‡ä»¶
-echo [æ­¥éª¤ 2/3] ä¸‹è½½æ¨¡åž‹æ–‡ä»¶...
+:: ²½Öè 2: Ä£ÐÍÎÄ¼þ
+echo [²½Öè 2/3] ÏÂÔØÄ£ÐÍÎÄ¼þ...
 
 set "HF_BASE=https://huggingface.co/%REPO%/resolve/main/"
 if %USE_HF_MIRROR%==1 set "HF_BASE=https://hf-mirror.com/%REPO%/resolve/main/"
@@ -132,11 +133,11 @@ for %%f in (default/model.pt default/ref.txt default/ref.wav) do (
     call :download_file "%HF_BASE%%%f?download=true" "%SCRIPT_DIR%\model\%%f"
     if errorlevel 1 exit /b 1
 )
-echo [å®Œæˆ] æ¨¡åž‹ä¸‹è½½å®Œæˆ
+echo [Íê³É] Ä£ÐÍÏÂÔØÍê³É
 echo.
 
-:: æ­¥éª¤ 3: åº”ç”¨
-echo [æ­¥éª¤ 3/3] ä¸‹è½½åº”ç”¨...
+:: ²½Öè 3: Ó¦ÓÃ
+echo [²½Öè 3/3] ÏÂÔØÓ¦ÓÃ...
 set "GH_BASE=https://github.com/%REPO%/releases/download/%VERSION%/"
 if %USE_GH_MIRROR%==1 set "GH_BASE=https://ghfast.top/https://github.com/%REPO%/releases/download/%VERSION%/"
 
@@ -146,17 +147,17 @@ set "EXE_PATH=%SCRIPT_DIR%\%CLI_FINAL_EXE_NAME%"
 call :download_file "%APP_URL%" "%EXE_PATH%"
 if errorlevel 1 (
     echo.
-    echo [è‡´å‘½é”™è¯¯] æœªæ‰¾åˆ° Windows ç‰ˆæœ¬CLIåº”ç”¨ï¼
-    echo è¯·ç¡®è®¤ Release ä¸­åŒ…å«: %CLI_WIN_ASSET_NAME%
+    echo [ÖÂÃü´íÎó] Î´ÕÒµ½ Windows °æ±¾CLIÓ¦ÓÃ£¡
+    echo ÇëÈ·ÈÏ Release ÖÐ°üº¬: %CLI_WIN_ASSET_NAME%
     pause
     exit /b 1
 )
 
 attrib -R "%EXE_PATH%" 2>nul
-echo [å®Œæˆ] Cliåº”ç”¨å·²ä¿å­˜ä¸º %CLI_FINAL_EXE_NAME%
+echo [Íê³É] CliÓ¦ÓÃÒÑ±£´æÎª %CLI_FINAL_EXE_NAME%
 echo.
 echo ========================================
-echo å®‰è£…æˆåŠŸï¼åŒå‡»è¿è¡Œ %CLI_FINAL_EXE_NAME% å¯åŠ¨å‘½ä»¤è¡ŒæŽ¨ç†ç¨‹åºã€‚
+echo °²×°³É¹¦£¡Ë«»÷ÔËÐÐ %CLI_FINAL_EXE_NAME% Æô¶¯ÃüÁîÐÐÍÆÀí³ÌÐò¡£
 echo ========================================
 
 
@@ -166,16 +167,16 @@ set "EXE_PATH=%SCRIPT_DIR%\%API_FINAL_EXE_NAME%"
 call :download_file "%APP_URL%" "%EXE_PATH%"
 if errorlevel 1 (
     echo.
-    echo [è‡´å‘½é”™è¯¯] æœªæ‰¾åˆ° Windows ç‰ˆæœ¬APIåº”ç”¨ï¼
-    echo è¯·ç¡®è®¤ Release ä¸­åŒ…å«: %API_WIN_ASSET_NAME%
+    echo [ÖÂÃü´íÎó] Î´ÕÒµ½ Windows °æ±¾APIÓ¦ÓÃ£¡
+    echo ÇëÈ·ÈÏ Release ÖÐ°üº¬: %API_WIN_ASSET_NAME%
     pause
     exit /b 1
 )
 
 attrib -R "%EXE_PATH%" 2>nul
-echo [å®Œæˆ] Apiåº”ç”¨å·²ä¿å­˜ä¸º %API_FINAL_EXE_NAME%
+echo [Íê³É] ApiÓ¦ÓÃÒÑ±£´æÎª %API_FINAL_EXE_NAME%
 echo.
 echo ========================================
-echo å®‰è£…æˆåŠŸï¼åŒå‡»è¿è¡Œ %API_FINAL_EXE_NAME% å¯åŠ¨ApiæœåŠ¡ç¨‹åºã€‚
+echo °²×°³É¹¦£¡Ë«»÷ÔËÐÐ %API_FINAL_EXE_NAME% Æô¶¯Api·þÎñ³ÌÐò¡£
 echo ========================================
 pause
