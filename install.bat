@@ -5,10 +5,10 @@ setlocal
 :: 配置区
 :: ==============================
 set "REPO=nihilityer/nihility-gsv"
-set "VERSION=v0.1.0"
-set "CLI_WIN_ASSET_NAME=nihility-gsv-cli-v0.1.0-x86_64-pc-windows-msvc.exe"
+set "VERSION=v0.2.1"
+set "CLI_WIN_ASSET_NAME=nihility-gsv-cli-v0.2.1-x86_64-pc-windows-msvc.exe"
 set "CLI_FINAL_EXE_NAME=nihility-gsv-cli.exe"
-set "API_WIN_ASSET_NAME=nihility-gsv-api-v0.1.0-x86_64-pc-windows-msvc.exe"
+set "API_WIN_ASSET_NAME=nihility-gsv-api-v0.2.1-x86_64-pc-windows-msvc.exe"
 set "API_FINAL_EXE_NAME=nihility-gsv-api.exe"
 
 :: ==============================
@@ -138,7 +138,7 @@ echo.
 :: 步骤 3: 应用
 echo [步骤 3/3] 下载应用...
 set "GH_BASE=https://github.com/%REPO%/releases/download/%VERSION%/"
-if %USE_GH_MIRROR%==1 set "GH_BASE=https://ghproxy.com/https://github.com/%REPO%/releases/download/%VERSION%/"
+if %USE_GH_MIRROR%==1 set "GH_BASE=https://ghfast.top/https://github.com/%REPO%/releases/download/%VERSION%/"
 
 set "APP_URL=%GH_BASE%%CLI_WIN_ASSET_NAME%"
 set "EXE_PATH=%SCRIPT_DIR%\%CLI_FINAL_EXE_NAME%"

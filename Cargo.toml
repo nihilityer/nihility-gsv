@@ -1,6 +1,6 @@
 [package]
 name = "nihility-gsv"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 description = "A GPT_Sovits inference lib in Rust base on libtorch"
 license = "MIT"

@@ -27,27 +27,47 @@ curl -fsSL https://raw.githubusercontent.com/nihilityer/nihility-gsv/refs/heads/
 1. 下载一键安装脚本到需要安装的目录（自动下载文件较多，请注意不要直接放在桌面）：[下载地址](https://raw.githubusercontent.com/nihilityer/nihility-gsv/refs/heads/main/install.bat)
 2. 双击执行
 
-## 推理
+## 命令行推理
 
-**注**：所有推理结果都在`output`目录下，根据当前使用的模型来创建目录，根据生成完成的时间来设置文件名（默认生成在：`output/default`）
+**注**：所有推理结果都在`output`目录下，根据生成完成的时间来设置文件名（默认生成在：`output`）
 
 ### Linux系统
 
 ```bash
-./nihility-gsv -t '心有所向，日复一日，必有精进。'
+./nihility-gsv-cli -t '心有所向，日复一日，必有精进。'
 ```
 
 ### windows系统
 
 文件管理器中打开安装目录，在地址栏中输入`cmd`打开命令提示符，然后输入命令：
 
+也支持直接双击执行
+
 ```cmd
-nihility-gsv.exe -t 心有所向，日复一日，必有精进。
+nihility-gsv-cli.exe -t 心有所向，日复一日，必有精进。
 ```
+
+## Api服务器
+
+### Linux系统
+
+```bash
+./nihility-gsv-api
+```
+
+### Windows系统
+
+双击`nihility-gsv-api.exe`执行
+
+# 配置
+
+有关gsv核心的模型配置文件默认为：`config/nihility-gsv.toml`，支持Json格式配置。
+
+Api服务器相关配置文件默认为：`config/nihility-gsv-api.toml`，支持Json格式配置。
 
 # TODO
 
-- [ ] API调用
+- [x] API调用
 - [ ] 流式推理
 - [ ] 更多的模型推理方式选择
 - [ ] 更高性能的模型推理
