@@ -68,7 +68,8 @@ jobs:
         shell: bash
         run: |
           mkdir release
-          cp "./target/${{ matrix.target }}/release/nihility-gsv${{ matrix.ext }}" "release/nihility-gsv-${{ inputs.version || github.ref_name }}-${{ matrix.target }}${{ matrix.ext }}"
+          cp "./target/${{ matrix.target }}/release/nihility-gsv-cli${{ matrix.ext }}" "release/nihility-gsv-cli-${{ inputs.version || github.ref_name }}-${{ matrix.target }}${{ matrix.ext }}"
+          cp "./target/${{ matrix.target }}/release/nihility-gsv-api${{ matrix.ext }}" "release/nihility-gsv-api-${{ inputs.version || github.ref_name }}-${{ matrix.target }}${{ matrix.ext }}"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
