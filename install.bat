@@ -6,8 +6,10 @@ setlocal
 :: ==============================
 set "REPO=nihilityer/nihility-gsv"
 set "VERSION=v0.1.0"
-set "WIN_ASSET_NAME=nihility-gsv-v0.1.0-x86_64-pc-windows-msvc.exe"
-set "FINAL_EXE_NAME=nihility-gsv.exe"
+set "CLI_WIN_ASSET_NAME=nihility-gsv-cli-v0.1.0-x86_64-pc-windows-msvc.exe"
+set "CLI_FINAL_EXE_NAME=nihility-gsv-cli.exe"
+set "API_WIN_ASSET_NAME=nihility-gsv-api-v0.1.0-x86_64-pc-windows-msvc.exe"
+set "API_FINAL_EXE_NAME=nihility-gsv-api.exe"
 
 :: ==============================
 :: 参数解析
@@ -138,22 +140,42 @@ echo [步骤 3/3] 下载应用...
 set "GH_BASE=https://github.com/%REPO%/releases/download/%VERSION%/"
 if %USE_GH_MIRROR%==1 set "GH_BASE=https://ghproxy.com/https://github.com/%REPO%/releases/download/%VERSION%/"
 
-set "APP_URL=%GH_BASE%%WIN_ASSET_NAME%"
-set "EXE_PATH=%SCRIPT_DIR%\%FINAL_EXE_NAME%"
+set "APP_URL=%GH_BASE%%CLI_WIN_ASSET_NAME%"
+set "EXE_PATH=%SCRIPT_DIR%\%CLI_FINAL_EXE_NAME%"
 
 call :download_file "%APP_URL%" "%EXE_PATH%"
 if errorlevel 1 (
     echo.
-    echo [致命错误] 未找到 Windows 版本应用！
-    echo 请确认 Release 中包含: %WIN_ASSET_NAME%
+    echo [致命错误] 未找到 Windows 版本CLI应用！
+    echo 请确认 Release 中包含: %CLI_WIN_ASSET_NAME%
     pause
     exit /b 1
 )
 
 attrib -R "%EXE_PATH%" 2>nul
-echo [完成] 应用已保存为 %FINAL_EXE_NAME%
+echo [完成] Cli应用已保存为 %CLI_FINAL_EXE_NAME%
 echo.
 echo ========================================
-echo 安装成功！双击运行 %FINAL_EXE_NAME% 启动程序。
+echo 安装成功！双击运行 %CLI_FINAL_EXE_NAME% 启动命令行推理程序。
+echo ========================================
+
+
+set "APP_URL=%GH_BASE%%API_WIN_ASSET_NAME%"
+set "EXE_PATH=%SCRIPT_DIR%\%API_FINAL_EXE_NAME%"
+
+call :download_file "%APP_URL%" "%EXE_PATH%"
+if errorlevel 1 (
+    echo.
+    echo [致命错误] 未找到 Windows 版本API应用！
+    echo 请确认 Release 中包含: %API_WIN_ASSET_NAME%
+    pause
+    exit /b 1
+)
+
+attrib -R "%EXE_PATH%" 2>nul
+echo [完成] Api应用已保存为 %API_FINAL_EXE_NAME%
+echo.
+echo ========================================
+echo 安装成功！双击运行 %API_FINAL_EXE_NAME% 启动Api服务程序。
 echo ========================================
 pause

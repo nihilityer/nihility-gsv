@@ -43,8 +43,10 @@ MODEL_DEFAULT_FILES=("default/model.pt" "default/ref.txt" "default/ref.wav")
 # GitHub 仓库和要下载的应用资产名
 GITHUB_APP_REPO="nihilityer/nihility-gsv"
 GITHUB_APP_VERSION="v0.1.0"
-GITHUB_APP_ASSET_NAME="nihility-gsv-v0.1.0-x86_64-unknown-linux-gnu"
-FINAL_APP_NAME="nihility-gsv"
+GITHUB_CLI_APP_ASSET_NAME="nihility-gsv-cli-v0.1.0-x86_64-unknown-linux-gnu"
+CLI_FINAL_APP_NAME="nihility-gsv-cli"
+GITHUB_API_APP_ASSET_NAME="nihility-gsv-api-v0.1.0-x86_64-unknown-linux-gnu"
+API_FINAL_APP_NAME="nihility-gsv-api"
 
 # ======================
 # 辅助函数
@@ -142,15 +144,28 @@ echo "Hugging Face 模型下载完成。"
 
 # 3. 从 GitHub Release 下载应用
 echo "=== 步骤 3: 从 GitHub 下载应用 ==="
-GITHUB_DOWNLOAD_URL="https://github.com/$GITHUB_APP_REPO/releases/download/$GITHUB_APP_VERSION/$GITHUB_APP_ASSET_NAME"
+echo "=== 下载命令行推理程序 ==="
+GITHUB_DOWNLOAD_URL="https://github.com/$GITHUB_APP_REPO/releases/download/$GITHUB_APP_VERSION/$GITHUB_CLI_APP_ASSET_NAME"
 MIRRORED_GITHUB_URL=$(apply_gh_mirror "$GITHUB_DOWNLOAD_URL")
-APP_PATH="$SCRIPT_DIR/$FINAL_APP_NAME"
+APP_PATH="$SCRIPT_DIR/$CLI_FINAL_APP_NAME"
 
 # 下载应用
 download_file "$MIRRORED_GITHUB_URL" "$APP_PATH"
 
 # 赋予执行权限
 chmod +x "$APP_PATH"
+
+echo "=== 下载Api服务器程序 ==="
+GITHUB_DOWNLOAD_URL="https://github.com/$GITHUB_APP_REPO/releases/download/$GITHUB_APP_VERSION/$GITHUB_API_APP_ASSET_NAME"
+MIRRORED_GITHUB_URL=$(apply_gh_mirror "$GITHUB_DOWNLOAD_URL")
+APP_PATH="$SCRIPT_DIR/$API_FINAL_APP_NAME"
+
+# 下载应用
+download_file "$MIRRORED_GITHUB_URL" "$APP_PATH"
+
+# 赋予执行权限
+chmod +x "$APP_PATH"
+
 echo "GitHub 应用下载并授权完成。"
 
 echo "所有任务已完成！"
