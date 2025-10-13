@@ -9,7 +9,7 @@ use tonic::codegen::tokio_stream::wrappers::ReceiverStream;
 use tonic::codegen::tokio_stream::{Stream, StreamExt};
 use tonic::transport::Server;
 use tonic::{Code, Request, Response, Status, Streaming};
-use tracing::{error, info};
+use tracing::{debug, error};
 
 const CHANNEL_CAPACITY: usize = 100;
 
@@ -31,11 +31,12 @@ impl nihility_rpc::server::Execute for NihilityGsvRpcServer {
         &self,
         request: Request<ExecuteRequest>,
     ) -> Result<Response<ExecuteResponse>, Status> {
+        debug!(?request, "execute");
         let req: ExecuteData = request
             .into_inner()
             .try_into()
             .map_err(|e| Status::invalid_argument(format!("{:?}", e)))?;
-        info!("Gsv Executing request: {:?}", req);
+        debug!("Gsv Executing Request Data: {:?}", req);
         match req {
             ExecuteData::String(text) => {
                 let audio_data = self
@@ -66,8 +67,9 @@ impl nihility_rpc::server::Execute for NihilityGsvRpcServer {
 
     async fn execute_stream_out(
         &self,
-        _request: Request<ExecuteRequest>,
+        request: Request<ExecuteRequest>,
     ) -> Result<Response<Self::ExecuteStreamOutStream>, Status> {
+        debug!(?request, "execute_stream_out");
         Err(Status::unimplemented("stream out not supported"))
     }
 
@@ -77,6 +79,7 @@ impl nihility_rpc::server::Execute for NihilityGsvRpcServer {
         &self,
         request: Request<Streaming<ExecuteRequest>>,
     ) -> Result<Response<Self::ExecuteStreamStream>, Status> {
+        debug!(?request, "execute_stream");
         let mut req_stream = request.into_inner();
         let (tx, rx) = mpsc::channel(CHANNEL_CAPACITY);
         let gsv = self.gsv.lock().await.clone();
@@ -87,7 +90,7 @@ impl nihility_rpc::server::Execute for NihilityGsvRpcServer {
                         let transfer_result: Result<ExecuteData, Status> = ok_req
                             .try_into()
                             .map_err(|e| Status::invalid_argument(format!("{:?}", e)));
-                        info!("execute_stream Executing request: {:?}", transfer_result);
+                        debug!("execute_stream Executing request: {:?}", transfer_result);
                         match transfer_result {
                             Ok(req_data) => match req_data {
                                 ExecuteData::String(text) => {
