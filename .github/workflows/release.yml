@@ -40,6 +40,9 @@ jobs:
       - name: Echo info
         run: echo ${{ inputs.version || github.ref_name }}
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+
       - name: Download and Extract libtorch (Linux/Windows)
         if: matrix.libtorch_url != ''
         shell: bash
